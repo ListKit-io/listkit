@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "listkit": {
+      "type": "http",
+      "url": "https://developer.listkit.io/mcp"
+    }
+  }
+}

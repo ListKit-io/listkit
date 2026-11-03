@@ -1,5 +1,15 @@
 {
   "name": "listkit",
-  "owner": { "name": "ListKit", "url": "https://listkit.io" },
-  "plugins": []
+  "owner": {
+    "name": "ListKit",
+    "url": "https://listkit.io"
+  },
+  "description": "ListKit for AI assistants: the ListKit MCP connector and the cold email skills.",
+  "plugins": [
+    {
+      "name": "listkit",
+      "source": "./plugins/listkit",
+      "description": "Run cold email on ListKit from a conversation: build lead lists that cover your whole market, write campaigns with ListKit's AI Script Writer, launch on every inbox, draft replies for you to approve, and keep campaigns fed every week."
+    }
+  ]
 }
