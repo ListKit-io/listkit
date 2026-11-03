@@ -47,7 +47,7 @@ Running out of audience is the #1 reason customers churn. One search never finds
 | ICP type | Lead with |
 |---|---|
 | Local businesses (contractors, clinics, restaurants, salons) | SIC codes (O), city/state slices (M), industry (B), owner titles |
-| Niche services and agencies | Keyword cluster (A), multi-thread titles (F) |
+| Niche services and agencies | Keyword cluster (A), multi-thread titles (F), SIC codes (O) |
 | SaaS and ecom | Technology (D), keyword cluster (A), revenue bands (K) |
 | Clear traditional industry (insurance, construction, manufacturing) | Industry (B), SIC codes (O), size or revenue bands (G, K) |
 | Selling to a function (heads of sales, marketing leaders) | Seniority + department (J), title clusters (F), then company routes |
@@ -60,7 +60,7 @@ Routes (run the ones that fit, each with its own count and sample):
 |---|---|---|
 | A. Keyword cluster | Companies that describe themselves this way, whatever industry they're filed under | Usually the biggest orderable pool. Take it to 150 to 250 terms (**listkit-keyword-clusters**) before you call the TAM: a 40-term cluster leaves reach on the table |
 | B. Industry | Companies filed under the clean industry | Order on industry alone (the engine adds its own cluster) |
-| D. Technology | Companies running a tool that signals the ICP (Shopify, HubSpot, Klaviyo) | Great for big platforms (ecom, SaaS). Check the count before relying on it |
+| D. Technology | Companies running a tool that signals the ICP (Shopify, HubSpot, Klaviyo) | Great for big platforms (ecom, SaaS). Detection of niche tools is sparse (a few hundred companies), so check the count before relying on it |
 | E. Intent (`topics`) | Companies researching the problem right now | US only; smaller, hotter list, worth its own angle |
 | F. Multi-thread titles | More people at the same companies: ops, delivery, marketing, partnerships, not just the founder | Often +20 to 50% with zero dilution. Pitch each role on the pain it owns |
 | G. Size bands | The next band up or down (1-10, 51-200, 201-500) | Different budgets: adjust the offer |
@@ -70,9 +70,9 @@ Routes (run the ones that fit, each with its own count and sample):
 | K. Revenue bands | Companies by `company_revenue` instead of headcount | Finds lean, high-revenue companies the size filter skips (agencies, ecom, brokers). Use instead of `company_size`, not with it |
 | L. Company HQ vs person location | People located in the target geo (`location`) vs companies headquartered there (`company_location`) | Run both: remote teams and multi-office companies show up in one and not the other |
 | M. City and state slices | Local and regional markets city by city (`find_filter_values` city/state) | For local businesses, lets you go metro by metro and keeps time zones clean |
-| O. SIC codes (`company_sic`) | Companies by official industry code (`find_filter_values` field `company_sic` for exact codes) | Cleanest route for traditional and local businesses. If a search or order tool doesn't accept `company_sic`, put the SIC descriptions into the keyword cluster instead |
+| O. SIC codes (`company_sic`) | Companies by official industry code (`find_filter_values` field `company_sic` for exact codes) | Cleanest route for traditional and local businesses. Search sizes it and orders take the same filter. If `estimate_order` refuses it, order through the keyword cluster with the SIC descriptions |
 
-**Mine the taxonomy for keywords.** `find_filter_values` can look up SIC codes (`company_sic`), micro-industries (`company_micro_industry`), verticals (`company_vertical`), target audience (`company_target_audience`) and business model (`company_business_model`). Search and orders can't filter on those, but their labels are perfect keyword-cluster terms: look up the ICP's SIC descriptions and micro-industries and add them to route A.
+**Mine the taxonomy for keywords.** `find_filter_values` can look up SIC codes (`company_sic`), micro-industries (`company_micro_industry`), verticals (`company_vertical`), target audience (`company_target_audience`) and business model (`company_business_model`). Search filters on them (plus growth stage, funding, money raised, last funding date and hiring), and orders take the same filter as search, so order the search as run. Some funding and growth filters may still be refused on orders: if `estimate_order` refuses one, put its labels into the keyword cluster (route A), re-count and order that. Their labels also make great cluster terms on their own.
 
 How to run it:
 1. Build route A first (it's the biggest), then each other route. Show the user a TAM map:
@@ -86,7 +86,7 @@ I Marketing agencies (adjacent)     24,000 people                     "launch a 
 Total reachable: ~12k on the core pitch, ~36k with the adjacent ICP
 ```
 2. Same pitch = same campaign. A different pitch (intent angle, adjacent ICP, a new size band) = its own campaign with its own copy.
-3. Order the tightest-fit route first. Net-new search skips anyone already bought, so each later route's count shrinks as earlier orders land: re-count right before each order, never add up raw counts as the total.
+3. Order the tightest-fit route first, one order at a time: wait for each order to finish before placing the next on an overlapping search, or they take each other's contacts and one can deliver zero. Net-new search skips anyone already bought, so each later route's count shrinks as earlier orders land: re-count right before each order, never add up raw counts as the total.
 4. Save every route as its own saved filter (`[ICP] - [route]`) so **listkit-volume-engine** refills from all of them, not just one.
 5. Push back on dilution, not on volume: if hitting the user's number means a weaker fit, say which route dilutes it and give it its own campaign instead of padding the core list.
 6. When every route is used up, say it plainly with the total reached, and propose the next adjacent ICP before the lists run dry.
@@ -117,13 +117,13 @@ Total reachable: ~12k on the core pitch, ~36k with the adjacent ICP
 Precision beats raw numbers, but a list too small to test teaches nothing.
 
 ### 7. Exclusions BEFORE ordering
-The account exclude list does not apply to orders. Protect the user:
+The account exclude list does not yet apply to orders. Protect the user:
 - Ask once: "Any customers, open deals or past contacts to keep off this list?"
 - Domains/LinkedIn/emails: `add_exclusions` (or `create_exclude_list` + `import_exclude_list` via `create_upload_link` for a CSV). This filters search results.
 - For orders, pass up to 1,000 emails in `exclude_emails`. For bigger lists, run `check_exclusions` on delivered contacts before importing them to a campaign and drop matches.
 
 ### 8. Estimate and order
-- Search counts people; orders deliver verified emails, so delivered is lower than the search count. Before ordering, say "search shows 4,100 people; expect about [estimated_pool] verified emails." If a preview says you already bought them all but `estimate_order` shows a pool, trust the estimate.
+- Search counts people; orders deliver verified emails, so delivered is lower than the search count. Before ordering, say "search shows 4,100 people; expect about [expected_delivered low to high] verified emails" (fall back to `estimated_pool` if the range is missing). If a preview says you already bought them all but `estimate_order` shows a pool, trust the estimate.
 - Sizing can fail (an upstream error, a null estimate, "count unavailable", or "not found" on accounts with an exclude list). Retry once, and if a count fails, try `estimate_order` for the number. If there's still no number, say so, use the preview count as approximate, and order a smaller first batch (1,000 to 2,000) rather than guessing high. Never invent a pool size.
 - `estimate_order` with the same targeting (orders use `job_titles`, `excluded_job_titles`, `industry`, `keywords`, `countries`, `states`, `company_size`... not the search field names). Respect `refusal` and never exceed `estimated_pool`.
 - `fields: ["work_email"]` by default. Add `mobile` only if they'll call AND the list is US (mobile is US only, 3 credits each).
@@ -137,7 +137,7 @@ The account exclude list does not apply to orders. Protect the user:
 - Recycling: wait 2 to 4 months, remove everyone who replied, re-verify, and use a new angle.
 
 ### 10. Bad rows
-If more than ~10% of the sample is off-target, tighten the filters and keep going, without data-quality commentary. Offer once to send ListKit feedback (`send_feedback`, kind `off_target`, filters used, share of bad rows): tell the user what it contains and send it only if they agree. Never include company names or contact data.
+If more than ~10% of the sample is off-target, tighten the filters and keep going, without commentary on data quality. Offer once to send ListKit feedback (`send_feedback`, kind `off_target`, filters used, share of bad rows): tell the user what it contains and send it only if they agree. Never include company names or contact data.
 
 ## Imported lists (their own CSV)
 Verify before sending: `create_upload_link` (purpose `verification`), give them the link, then `upload_verification_file`, poll `get_verification_file`, and only import the `good` rows. Never import unverified scraped lists into ListKit inboxes. Uploaded CSVs drive a lot of the "high bounce" complaints.

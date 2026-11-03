@@ -107,7 +107,7 @@ How the writer fails, and the fix:
 - Save the writer + spintax output with `save_campaign_sequence` as returned (delays 0 / 3 / 4 days). If you save a sequence you edited by hand, keep every step's full `variants` array: a step saved without variants keeps only one variant and deletes the rest.
 - `save_campaign_sequence` replaces the WHOLE sequence. On an existing campaign, `get_campaign_sequence` first and keep anything the user wants kept.
 - After every save, `get_campaign_sequence` and check: 3 steps, 4/2/2 variants, a subject on step 1, spintax braces and merge variables intact. If anything is missing, save the same content again. Keep the final copy in the chat so it can be restored ("the copy deleted itself" happens).
-- Leave `variant_distribution` as `manual_equal` for a fresh test. If you ever use `ai_equal`, set `winning_metric: positive_reply_rate`.
+- Leave `variant_distribution` as `manual_equal` for a fresh test. If you ever use `ai_equal`, set `winning_metric: positive_reply_rate` (the default picks winners on opens).
 - The in-app preview may show raw spintax. That's preview-only; sent emails resolve it.
 
 ## 6. Variables and signature
