@@ -1,6 +1,6 @@
 ---
 name: listkit-business-profile
-description: Builds and keeps a ListKit user's business profile (what they sell, offer, proof, ideal customers, goals, lead target, booking and reply details) by researching their website and connected tools first and asking only for the gaps, then stores it so every later ListKit task reuses it. Use at a user's first ListKit session, when no profile exists, when the user says their offer, pricing, ICP or goals changed, or before launch, copy, list building, inbox drafts or planning if the profile is missing a field those need.
+description: Builds and keeps a ListKit user's business profile (what they sell, offer, proof, ideal customers, goals, lead target, booking and reply details) by researching their website and connected tools first and asking only for the gaps, then stores it so every later ListKit task reuses it. Use at a user's first ListKit session, when no profile exists, when the user says their offer, pricing, ICP or goals changed, or before launch, copy, list building, inbox routine or planning if the profile is missing a field those need.
 ---
 
 # Business Profile
@@ -28,7 +28,7 @@ Show what you found in 3 to 5 short lines ("Here's what I've got: you sell X to 
 | Best proof: one client result, and a guarantee if real | copy |
 | How many leads to reach, or the goal (new clients or revenue per month) | lists, planner |
 | Deal value, and close rate if known | planner |
-| Booking link, who takes calls, time zone, pricing you're OK sharing | inbox drafts |
+| Booking link, who takes calls, time zone, pricing you're OK sharing | inbox routine |
 | Customers and open deals to keep off lists (domains or a CSV) | exclusions |
 | Agency? Then list the clients you run outbound for | one profile per client |
 | Done cold email before? Best copy and numbers | copy, expectations |
@@ -59,7 +59,7 @@ Never store passwords, API keys, card or bank numbers, or anything the user asks
 - **listkit-launch-first-campaign:** skip questions the profile answers.
 - **listkit-cold-email-copywriter:** the writer brief comes straight from Offer, Proof, Guarantee, ICP words and Assets.
 - **listkit-list-builder:** ICP and lead target set the routes and the number to work back from. Exclusions go on the exclude list (`add_exclusions` or `import_exclude_list`).
-- **listkit-reply-desk:** inbox drafts setup comes from the Calls line.
+- **listkit-reply-desk:** inbox routine setup comes from the Calls line.
 - **listkit-outbound-planner** and **listkit-results-report:** goal, deal value and close rate.
 
 ## 6. Keep it fresh

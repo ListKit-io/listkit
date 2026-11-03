@@ -123,8 +123,8 @@ If `get_onboarding_status` shows the strategy call isn't done, give them the lin
 
 Then book the review: offer a calendar reminder for a results check ~21 days after first send, the window that decides whether customers stay (use their calendar connector if they have one). That review should be with this same workflow: run **listkit-campaign-doctor**.
 
-## Step 8b. Get inbox drafts ready
-Before replies start coming in, set up inbox drafts (**listkit-reply-desk** §1): booking link, what the call is, pricing they'll share, who takes calls, time zone. A scheduled task then reads the inbox and has every positive's reply and follow-up drafted within the hour, ready for their yes, which is what decides the first 21 days.
+## Step 8b. Set up the inbox routine
+Before replies start coming in, set up the inbox routine (**listkit-reply-desk** §1), which drafts every reply and follow-up for one-tap approval: booking link, what the call is, pricing they'll share, who takes calls, time zone. Every positive then has a reply waiting for approval within the hour and gets followed up until it books, which is what decides the first 21 days.
 
 ## Step 9. Queue campaign 2 before you leave
 
@@ -136,5 +136,6 @@ Ask: "What's the next ICP or angle we test?" If they have an answer, run steps 4
 - [ ] Campaign 1 created with 1,000+ leads actually added (or, for a far-off branded start, the order and import prepared for the user's yes ~7 days before), a 3-step sequence, every READY inbox attached with a signature, weekday schedule
 - [ ] Started, or scheduled with a date the user heard
 - [ ] Benchmark and dated timeline said out loud
+- [ ] Inbox routine on
 - [ ] Review date set
 - [ ] Campaign 2 ICP named
