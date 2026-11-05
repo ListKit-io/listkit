@@ -12,8 +12,8 @@ Requires a ListKit Bundle.
 
 ## Install
 
-- **Claude (web, desktop, Cowork):** open **Customize**, then **Plugins**. Click **Add**, then **Add marketplace**. In **URL**, enter `ListKit-io/listkit-agent-kit` and click **Sync**. Click **Add** next to ListKit, then connect your ListKit account from the plugin's **Connectors** tab. Plugins need a paid Claude plan.
-- **Claude Code:** run `claude plugin install listkit --marketplace ListKit-io/listkit-agent-kit` in your terminal (Claude Code 2.1.292 or later). Then run `/mcp`, choose `plugin:listkit:listkit` and **Authenticate**.
+- **Claude (web, desktop, Cowork):** open **Customize**, then **Plugins**. Click **Add**, then **Add marketplace**. In **URL**, enter `ListKit-io/ListKit` and click **Sync**. Click **Add** next to ListKit, then connect your ListKit account from the plugin's **Connectors** tab. Plugins need a paid Claude plan.
+- **Claude Code:** run `claude plugin install listkit --marketplace ListKit-io/ListKit` in your terminal (Claude Code 2.1.292 or later). Then run `/mcp`, choose `plugin:listkit:listkit` and **Authenticate**.
 - **Any other AI tool:** add the MCP server `https://developer.listkit.io/mcp` and sign in with your ListKit account.
 
 ## Data
