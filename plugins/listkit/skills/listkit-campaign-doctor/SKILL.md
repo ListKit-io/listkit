@@ -10,8 +10,8 @@ Most "no results" isn't the platform. It's not enough tests, not enough volume, 
 Follow **listkit-operator** rules. Read-only analysis needs no confirmation.
 
 ## 1. Pull the data (parallel, free)
-- `get_campaigns_report` with `end_date` = today's UTC date and `start_date` = 89 days before it (the range is at most 90 days, both ends included). One call reads the Active and most recent campaigns (at most 10). Per campaign it gives status, leads, the totals for the range and `day_wise` (use the last 21 days for the trend). It also gives the sequence shape (steps, variants per step, spintax) and the rates per 1,000 leads contacted with the sample flags. The Interested replies and the allowance are in the same answer. If it says `campaigns_capped: true`, or you need other campaigns, pass their ids (from `list_campaigns`) in `campaign_ids`.
-- If a campaign started before the range, tell the user that its totals and rates cover only the last 89 days. Apply the thresholds below to these range counts.
+- `get_campaigns_report` without `start_date` or `end_date`, so the range is the tool's default: the last 30 days, UTC. A longer range makes the answer too large. One call reads the Active and most recent campaigns (at most 10). Per campaign it gives status, leads, the totals for the range and `day_wise` (use the last 21 days for the trend). It also gives the sequence shape (steps, variants per step, spintax) and the rates per 1,000 leads contacted with the sample flags. The Interested replies and the allowance are in the same answer. If it says `campaigns_capped: true`, or you need other campaigns, pass their ids (from `list_campaigns`) in `campaign_ids`.
+- If a campaign started before the range, tell the user that its totals and rates cover only the last 30 days. Apply the thresholds below to these range counts.
 - `get_account_health` (inbox status, warmup, daily capacity). The report does not read the inboxes.
 - `get_campaign_sequence` only when you need the copy itself (the report gives the sequence shape, not the copy)
 
