@@ -10,12 +10,9 @@ Most "no results" isn't the platform. It's not enough tests, not enough volume, 
 Follow **listkit-operator** rules. Read-only analysis needs no confirmation.
 
 ## 1. Pull the data (parallel, free)
-- `list_campaigns` (status + totals)
-- For each active or recent campaign: `get_campaign_analytics` (since launch) and `get_campaign_analytics_day_wise` (last 21 days)
-- `get_campaign_sequence` for the top campaigns
-- `list_mailboxes` (status, warmup, daily_sent_count vs daily_limit)
-- `get_usage_allowance`
-- `list_inbox_threads` on the Interested folder (folder id from `list_inbox_folders`)
+- `get_campaigns_report` with `start_date` 90 days ago (the longest range it takes). One call reads the Active and most recent campaigns (at most 10). Per campaign it gives status, leads, the totals for the range (since launch for a campaign under 90 days old) and `day_wise` (use the last 21 days for the trend). It also gives the sequence shape (steps, variants per step, spintax) and the rates per 1,000 leads contacted with the sample flags. The Interested replies and the allowance are in the same answer. For other campaigns, pass their ids in `campaign_ids`.
+- `get_account_health` (inbox status, warmup, daily capacity vs sends today). The report does not read the inboxes.
+- `get_campaign_sequence` only when you need the copy itself (the report gives the sequence shape, not the copy)
 
 ## 2. Do the math (per LEADS, not emails)
 For each campaign and the account total:
@@ -83,7 +80,7 @@ Then ask: "Want me to do 1 and 2?" and execute with the normal confirmations.
 - Rewrite with 4 variants + spintax: **listkit-cold-email-copywriter**, then `save_campaign_sequence` (read first, it replaces everything).
 - New angle as a new campaign: `duplicate_campaign`, new sequence, fresh list.
 - Fresh list for a winner: **listkit-list-builder**, then import.
-- Kill a loser (3,000+ leads, confirmed): pause via `update_campaign` / `set_campaign_status` PAUSED (confirm). PAUSED, not STOPPED: STOPPED can't be undone.
+- Kill a loser (3,000+ leads, confirmed): pause via `update_campaign` with status PAUSED (confirm). PAUSED, not STOPPED: STOPPED can't be undone.
 - Reply backlog: **listkit-reply-desk**.
 
 ## 7. Tone

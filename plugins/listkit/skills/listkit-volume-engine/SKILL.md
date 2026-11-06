@@ -12,10 +12,8 @@ Follow **listkit-operator** rules.
 ## Weekly routine (run in this order)
 
 ### 1. Capacity check (free)
-- `get_usage_allowance`: sends used vs limit this period, contacts stored vs limit
-- `list_mailboxes` (`limit: 100`, every page): READY inboxes x daily_limit = daily capacity; sum of `daily_sent_count` = today's actual
-- `list_campaigns`: active campaigns and their totals
-- For each active campaign, `get_campaign_analytics_day_wise` last 7 days
+- `get_campaigns_report` with `start_date` 90 days ago: one call for the active campaigns (Active first, at most 10) and their totals, `day_wise` per campaign (use the last 7 days), and `allowance` (sends used vs limit this period, contacts stored vs limit). If it says `campaigns_capped: true`, call it again with `campaign_ids` for the rest. §3 scores from the same answer.
+- `get_account_health`: `capacity.daily_capacity` = daily capacity (the daily limits of the connected inboxes), and `capacity.sent_today` = today's actual. It also lists ramping and disconnected inboxes, and active campaigns with no sends yesterday or today.
 
 Inbox coverage: every active campaign should have every sending-ready inbox attached. If an inbox became READY (finished warmup or a new Bundle) and isn't on the active campaigns, propose attaching it to all of them and attach on the user's yes. A scheduled run only lists it for approval.
 
@@ -26,12 +24,12 @@ Flag immediately:
 
 ### 2. Lead runway
 A 3-step sequence uses ~3 sends per lead. New leads needed per weekday ≈ daily capacity / 3 (about 330/day per Bundle, ~1,650/week). Keep at least 2 weeks loaded: READY inboxes x 25 x 10 weekdays / 3 (about 3,300 leads per Bundle). Sends are rarely the limit, leads are: most accounts use about a third of their capacity because they don't load enough leads.
-- Estimate leads remaining per campaign (`list_leads` with campaign_id, or import stats).
+- Estimate leads remaining per campaign (`get_leads(action=leads, campaign_id=<id>)`, or import stats).
 - Refill from every saved route for the ICP (list-builder §3c), not just the first list. When a route stops returning net-new people, move to the next one; when all routes are used up, propose the next adjacent ICP before the runway hits zero.
 - If total unsent leads < 2 weeks of runway, refill now. Don't wait for a campaign to finish: duplicate the winner (`duplicate_campaign`) and load a fresh list into the copy.
 
 ### 3. Score the campaigns
-Reply rate from 1,000+ leads contacted, positives from 3,000+ (smaller samples lie).
+Reply rate from 1,000+ leads contacted, positives from 3,000+ (smaller samples lie). The §1 report gives each campaign's `per_1000_contacted` rates and the `sample` flags for these thresholds.
 - Pick winners on positives and booked calls, never on reply rate alone (3% reply with 2 positives loses to 1.5% reply with 10).
 - Winner (≥ ~1 positive per 1,000): duplicate onto a new list in the same ICP, or the same angle to an adjacent ICP.
 - Middle: new variant or angle (see **listkit-cold-email-copywriter**).
@@ -70,7 +68,7 @@ Set it up with the user once:
 3. **Spending guardrails, agreed up front and written into the task:**
    - The task never spends credits or changes campaigns on its own. It prepares each refill as a proposal (saved filter, quantity, cost from `estimate_order`, target campaign); the order and import run only after the user's yes in a conversation and the server's confirmation.
    - A weekly credit budget for proposed refills (e.g. "up to 3,000 credits/week"). It caps what gets proposed; it is not a pre-approval.
-   - Which saved filters it may refill from (`list_saved_filters`). It never invents a new ICP on its own.
+   - Which saved filters it may refill from (`list_filters(action=saved)`). It never invents a new ICP on its own.
    - New campaigns, new copy, pausing or deleting anything: the task drafts and reports, the user approves next time they're in the chat.
 4. **Report** at the end of every run in the format above, with anything waiting for approval at the top.
 

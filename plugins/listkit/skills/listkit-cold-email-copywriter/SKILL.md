@@ -113,7 +113,7 @@ How the writer fails, and the fix:
 ## 6. Variables and signature
 - Lead variables: `{{first_name}}`, `{{last_name}}`, `{{email}}`, `{{company_name}}`, `{{website}}`, `{{linkedin_profile}}`, `{{location}}`, plus CSV columns. Match the format the account's existing sequences use (`get_campaign_sequence` on any campaign).
 - There's no fallback value for an empty field. On order imports, only use `{{first_name}}` and `{{company_name}}`. Never send a blank variable.
-- `{{sender_first_name}}` is not a variable and sends blank. The mailbox signature carries the sender: check `list_mailboxes` for a `signature` on every inbox. If any are empty or don't match the sender, offer `set_mailbox_signature` (name, title, company, under 350 characters, no links or images).
+- `{{sender_first_name}}` is not a variable and sends blank. The mailbox signature carries the sender: check `list_mailboxes` for a `signature` on every inbox. If any are empty or don't match the sender, offer `update_mailboxes(action=signature)` (name, title, company, under 350 characters, no links or images).
 - A personalized column from the user's own CSV (icebreaker, custom first line): map it in `import_leads_csv` `file_headers`, count blank cells first (over ~5% blank: drop those rows or fill a generic line), and send one test lead to check it fills in before starting. CSV imports keep first name, last name and company; check any custom column with the test lead before promising it.
 
 ## 7. Existing copy and proven winners

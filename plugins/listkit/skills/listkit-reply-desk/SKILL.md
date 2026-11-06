@@ -23,11 +23,10 @@ Take these from the business profile (**listkit-business-profile**) and ask in o
 5. Their time zone
 6. Any leads or companies to never touch (manual-only)
 
-Then create a scheduled task in their AI tool that runs this skill on weekdays as often as the tool allows (hourly is common), with those answers written into the task prompt, plus "load listkit-operator and listkit-reply-desk first. Unless unattended replies are on for this connection, read the inbox, prepare drafts and notify me; never send, categorize, delete or exclude without my yes in a conversation." Offer a webhook for `email.replied` to Slack (`create_webhook_endpoint` with a URL they give you, then `send_test_webhook`) so hot replies also ping them right away; say in one line that reply details then go to that third-party service. Tell them in one line what will run and that they can pause it anytime.
+Then create a scheduled task in their AI tool that runs this skill on weekdays as often as the tool allows (hourly is common), with those answers written into the task prompt, plus "load listkit-operator and listkit-reply-desk first. Unless unattended replies are on for this connection, read the inbox, prepare drafts and notify me; never send, categorize, delete or exclude without my yes in a conversation." Offer a webhook for `email.replied` to Slack (`manage_webhooks(action=create)` with a URL they give you, then `manage_webhooks(action=send_test)`) so hot replies also ping them right away; say in one line that reply details then go to that third-party service. Tell them in one line what will run and that they can pause it anytime.
 
 ## 2. Each run: pull and check
-- `list_inbox_folders` for folder ids (not the same as lead-category ids) and `list_lead_categories` for category ids.
-- `list_inbox_threads` on the unread folder and the Interested folder, newest first.
+- `get_inbox_digest`: one read for the lead categories with their ids (not the same as inbox folder ids), the unread replies and the Interested threads, newest first. It never opens a thread. If it says `unread_first_page_only: true` or `interested_first_page_only: true`, a folder has more threads than it read: work through these, then call it again.
 - Only open a thread (`get_inbox_thread_messages`, which marks it read) when you're going to act on it.
 - Before EVERY send (anti-double-send):
   - Re-read the latest messages. If the user, a teammate or another tool already replied after the prospect's latest inbound, don't send.
@@ -45,7 +44,7 @@ Re-read the message body every time. Don't trust the ListKit category alone.
 | Not now | "next quarter", "budget in Jan" | Thank them, set the category, note the date in the run report |
 | Confirms a time | "Tuesday at 2 works" | Book it (§6) |
 | No | "not interested", "no thanks" | Set Not Interested. No reply unless they asked a question |
-| Remove me | "remove me", "unsubscribe", "stop emailing" | `delete_leads` with no `campaign_id` (`dry_run` first) so they leave every campaign, then `add_exclusions`. No reply |
+| Remove me | "remove me", "unsubscribe", "stop emailing" | `delete_leads` with no `campaign_id` (`dry_run` first) so they leave every campaign, then `manage_exclusions(action=add_entries)`. No reply |
 | Auto | out-of-office, auto-ack, bounce, left company | Set Out Of Office (or the closest category) so positives stay honest. No reply, no follow-up |
 
 **Hold as a draft and flag it, don't send:** anger or legal threats, custom pricing or contract questions you can't answer from §1, requests for documents you don't have, anything about a refund or a billing dispute, a prospect who already met the user, and anything you're unsure about. Flag these at the top of the run report and by webhook if set up.

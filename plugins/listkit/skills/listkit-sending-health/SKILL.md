@@ -10,10 +10,10 @@ Most "it's not sending" is normal pacing (warmup, ramp-up, schedule, follow-up d
 Follow **listkit-operator** rules. Billing actions are never done for the user.
 
 ## 1. Health snapshot (free, parallel)
-- `get_domain_stats`: total, active, setting up, disconnected, renewing soon
-- `list_mailboxes` (`limit: 100`, follow `next_cursor` to the end; check the count against `get_domain_stats`): per inbox `status`, `warmup_status` (NOT_STARTED / WARMING / READY), `warmup_days_remaining`, `daily_limit`, `daily_sent_count`
-- `get_domain_provisioning_status` and `list_prewarmed_claims` / `list_domain_orders` if anything is setting up
-- `list_campaigns` for status (Draft, Active, Paused, Stopped, Completed)
+- `get_account_health`: one read for the inboxes (total, active, disconnected), the inboxes still ramping with the days left in each ramp, the daily capacity and today's sends, the setup status of the newest domain order, and the active campaigns that sent nothing yesterday or today. It reads every mailbox page up to 500 inboxes, and says `inboxes_first_pages_only: true` past that.
+- `get_domains(action=prewarmed_claims)` / `get_domains(action=orders)` if anything is setting up. `no_active_domain_order: true` means no domain order is in progress, not that domains are ready.
+- `list_campaigns` for status (Draft, Active, Paused, Stopped, Completed). The health check counts only the active ones.
+- Per-inbox rows (`status`, `warmup_status` NOT_STARTED / WARMING / READY, `daily_limit`, `daily_sent_count`) only when a step below needs them: `list_mailboxes` (`limit: 100`, follow `next_cursor` to the end, then check the count against the health check's inbox total). Renewing-soon domains: `get_domains(action=stats)`.
 
 Show it as:
 ```
@@ -35,25 +35,25 @@ Always convert to dates for the user.
 ## 3. "Why isn't it sending?" checklist (in order)
 1. Weekend or outside the campaign's schedule window? Normal.
 2. Inboxes still warming or ramping? Normal. Give the date. "Stuck at 1/day" in the first sending days is the ramp. On multi-Bundle accounts, count only sending-ready inboxes.
-3. Campaign status not Active? If it paused after a failed payment, check `get_billing_summary` `dunning` first. If it isn't `none`, resuming won't hold: the payment needs updating in Billing, then hand off. Once dunning is `none`, resume it (confirm first). A STOPPED campaign can't resume: duplicate it.
+3. Campaign status not Active? If it paused after a failed payment, check `get_billing(action=summary)` `dunning` first. If it isn't `none`, resuming won't hold: the payment needs updating in Billing, then hand off. Once dunning is `none`, resume it (confirm first). A STOPPED campaign can't resume: duplicate it.
 4. Not all inboxes attached? Every campaign should have every sending-ready inbox on the account (read every page of `list_mailboxes`; a 2-Bundle account with only 40 of 80 attached is a common miss). Attach any missing READY inboxes (confirm first). This also covers inboxes that finished warmup or ramp after the campaign was built.
-5. No leads left, or the import added 0? Check `get_lead_import_status` / `list_leads`. Refill.
+5. No leads left, or the import added 0? Check `get_leads(action=import_status)` / `get_leads(action=leads)`. Refill.
 6. Follow-ups waiting on their delay? Normal pacing.
 7. Several campaigns running on the same inboxes? Normal and expected: every campaign uses every inbox, and each inbox's daily limit is shared across them.
-8. Stuck at a low limit after ramp ended? Try `set_mailbox_daily_limit` once per inbox (confirm), then re-read the limit. If it didn't change, hand off. Don't call `restart_mailbox_ramp` for a stuck ramp.
+8. Stuck at a low limit after ramp ended? Try `update_mailboxes(action=daily_limit)` once per inbox (confirm), then re-read the limit. If it didn't change, hand off. Don't call `update_mailboxes(action=restart_ramp)` for a stuck ramp.
 9. Inboxes disconnected, stuck in setup, or "provisioning failed"? Real problem, and only a ListKit person can fix it (same for redirect and sender name changes). Don't delete or restart things. Use the handoff in **listkit-account-help** with the inbox emails and what they see.
 
 ## 4. Settings changes (confirm each)
-- `set_mailbox_daily_limit`: only after ramp. During ramp the call succeeds but the inbox keeps its ramp limit, so never tell the user it changed: give the ramp end date instead. Don't go above 25/inbox. For the best deliverability some senders run 15 to 20.
-- `set_mailbox_warmup`: keep warmup on for ListKit inboxes. Don't turn it off to "go faster".
-- `set_mailbox_signature`: fine anytime, under 350 characters.
-- `restart_mailbox_ramp`: throws away ramp progress and drops the inbox to 1/day. Only for a mailbox that needs a deliverability fresh start, and say that clearly.
+- `update_mailboxes(action=daily_limit)`: only after ramp. During ramp the call succeeds but the inbox keeps its ramp limit, so never tell the user it changed: give the ramp end date instead. Don't go above 25/inbox. For the best deliverability some senders run 15 to 20.
+- `update_mailboxes(action=warmup)`: keep warmup on for ListKit inboxes. Don't turn it off to "go faster".
+- `update_mailboxes(action=signature)`: fine anytime, under 350 characters.
+- `update_mailboxes(action=restart_ramp)`: throws away ramp progress and drops the inbox to 1/day. Only for a mailbox that needs a deliverability fresh start, and say that clearly.
 - `delete_mailbox`: stops all sending from it, no pause. Avoid. ListKit-provisioned inboxes can't be deleted via API.
 
 ## 5. Adding capacity
 - More volume = more Bundles (new domains), not more sends per inbox.
-- Pre-warmed: `check_prewarmed_availability` → `pick_prewarmed_domains` → personas → confirm → `claim_prewarmed_domains`.
-- Branded: `search_new_domains` → `draft_domain_order` (each domain needs exactly 2 senders with different usernames, Google provider) → confirm → `confirm_domain_order` → poll `get_domain_provisioning_status`. It's usually live within 12 hours; tell the user up to 72h, then 14 days warmup. No progress after 24h = stuck: hand off.
+- Pre-warmed: `get_domains(action=prewarmed_availability)` → `get_domains(action=prewarmed_pick)` → personas → confirm → `claim_prewarmed_domains`.
+- Branded: `get_domains(action=search_new)` → `draft_domain_order` (each domain needs exactly 2 senders with different usernames, Google provider) → confirm → `confirm_domain_order` → poll `get_domains(action=provisioning)`. It's usually live within 12 hours; tell the user up to 72h, then 14 days warmup. No progress after 24h = stuck: hand off.
 - These use the Bundle's domain allowance. If they need another Bundle, tell them to add it in Billing or talk to the ListKit team. Don't start a checkout.
 
 ## 6. Their own inboxes

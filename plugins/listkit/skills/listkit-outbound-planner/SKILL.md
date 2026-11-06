@@ -11,7 +11,7 @@ The #1 reason ListKit customers churn is a gap between what they expected and wh
 - Average deal value (first payment) and lifetime value per client
 - Close rate on sales calls (default 20% if unknown, and say it's an assumption)
 - Goal: new clients or revenue per month
-- Their sending capacity: read it with `get_account_snapshot` / `get_billing_summary` (bundle count, emails/day) and `list_mailboxes` (warmup status)
+- Their sending capacity: read it with `get_account_overview` (bundle count and emails/day from `usage`, `billing` and `allowance`, warmup status and daily capacity from `inboxes`)
 - Infra type and start date (branded or pre-warmed, when provisioned)
 
 ## 2. The funnel (per Bundle at full volume)
@@ -24,7 +24,7 @@ The #1 reason ListKit customers churn is a gap between what they expected and wh
 | Booked calls | 40 to 60% of positives | ~3 to 5 |
 | New clients | calls x close rate | e.g. 20% → ~0.7 |
 
-Then: revenue = clients x deal value, and ROI = (clients x LTV) / ListKit cost. Once they have results, use their real numbers: LTV = monthly revenue per client x months a client stays; CAC = acquisition spend / clients won; LTV:CAC = LTV / CAC (e.g. $3,000 spent, 3 clients at $2,000/month staying 4 months: CAC $1,000, LTV $8,000, 8:1). Show the payback in clients using their real plan price (from `get_billing_summary`), e.g. "One client at $3k covers about N months of your plan."
+Then: revenue = clients x deal value, and ROI = (clients x LTV) / ListKit cost. Once they have results, use their real numbers: LTV = monthly revenue per client x months a client stays; CAC = acquisition spend / clients won; LTV:CAC = LTV / CAC (e.g. $3,000 spent, 3 clients at $2,000/month staying 4 months: CAC $1,000, LTV $8,000, 8:1). Show the payback in clients using their real plan price (from the overview's `billing`), e.g. "One client at $3k covers about N months of your plan."
 
 These are benchmarks across many accounts, not promises. Offers, markets and copy vary a lot: high-LTV offers win with below-average rates, low-LTV offers need above-average ones.
 
