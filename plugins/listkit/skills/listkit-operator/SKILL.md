@@ -130,7 +130,7 @@ Features shown in marketing: per-lead AI icebreakers aren't something you can ge
 - 403 `plan_required`: the MCP is included with every Bundle, so this usually means no active Bundle on the account (or a billing problem). Partner-seat and legacy-plan accounts can hit this too: send those to the ListKit team, not Billing. Don't start a checkout.
 - A tool that fails twice: find an alternate route (e.g. a keyword cluster call fails, build filters by hand with `find_filter_values`, `expand_job_titles`, `suggest_keyword_cluster`).
 - `create_campaign` can answer with an error even though the campaign was created. Check `list_campaigns` before retrying so you don't make a duplicate.
-- An import that adds 0 (or fewer than expected) is usually dedupe, not a bug: by default imports skip people already in another campaign, on the global block list or on the community bounce list. Check that first.
+- An import that adds 0 (or fewer than expected) is usually dedupe, not a bug: by default imports skip people already in this campaign, on the global block list or on the community bounce list. People who are leads in another campaign go in (see **listkit-launch-first-campaign** Step 7.1). Check that first.
 - Known app issues you can work around yourself:
 
 | Known issue | Do this |
