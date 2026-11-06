@@ -12,7 +12,7 @@ Follow **listkit-operator** rules.
 ## Weekly routine (run in this order)
 
 ### 1. Capacity check (free)
-- `get_campaigns_report` with `start_date` 90 days ago: one call for the active campaigns (Active first, at most 10) and their totals, `day_wise` per campaign (use the last 7 days), and `allowance` (sends used vs limit this period, contacts stored vs limit). If it says `campaigns_capped: true`, call it again with `campaign_ids` for the rest. §3 scores from the same answer.
+- `get_campaigns_report` with `start_date` 89 days before today (the range is at most 90 days, today included): one call for the active campaigns (Active first, at most 10) and their totals, `day_wise` per campaign (use the last 7 days), and `allowance` (sends used vs limit this period, contacts stored vs limit). If it says `campaigns_capped: true`, call it again with `campaign_ids` for the rest (ids from `list_campaigns`). §3 scores from the same answer. If a campaign started before the range, tell the user that its totals and rates cover only the last 89 days.
 - `get_account_health`: `capacity.daily_capacity` = daily capacity (the daily limits of the connected inboxes), and `capacity.sent_today` = today's actual. It also lists ramping and disconnected inboxes, and active campaigns with no sends yesterday or today.
 
 Inbox coverage: every active campaign should have every sending-ready inbox attached. If an inbox became READY (finished warmup or a new Bundle) and isn't on the active campaigns, propose attaching it to all of them and attach on the user's yes. A scheduled run only lists it for approval.
@@ -29,7 +29,7 @@ A 3-step sequence uses ~3 sends per lead. New leads needed per weekday ≈ daily
 - If total unsent leads < 2 weeks of runway, refill now. Don't wait for a campaign to finish: duplicate the winner (`duplicate_campaign`) and load a fresh list into the copy.
 
 ### 3. Score the campaigns
-Reply rate from 1,000+ leads contacted, positives from 3,000+ (smaller samples lie). The §1 report gives each campaign's `per_1000_contacted` rates and the `sample` flags for these thresholds.
+Reply rate from 1,000+ leads contacted, positives from 3,000+ (smaller samples lie). The §1 report gives each campaign's `per_1000_contacted` rates and the `sample` flags for these thresholds, counted over its range.
 - Pick winners on positives and booked calls, never on reply rate alone (3% reply with 2 positives loses to 1.5% reply with 10).
 - Winner (≥ ~1 positive per 1,000): duplicate onto a new list in the same ICP, or the same angle to an adjacent ICP.
 - Middle: new variant or angle (see **listkit-cold-email-copywriter**).

@@ -11,7 +11,7 @@ Agencies keep clients by communicating progress before the client has to ask. Th
 Ask only if unclear: period (default last 7 days), which campaigns (default all active; for agencies, the client's campaigns by name match), audience (owner or client).
 
 ## 2. Pull (free)
-- `get_campaigns_report` with `start_date` and `end_date` set to the period and, for an agency client, `campaign_ids` set to that client's campaigns (ids from `list_campaigns` by name match, at most 10). One call gives, per campaign, the totals for the period, `day_wise` for the trend and the rates per 1,000 leads contacted. It also gives the Interested replies in the period (lead name, campaign and reply date, no email addresses) and the sending allowance for capacity context.
+- `get_campaigns_report` with `start_date` and `end_date` set to the period and, for an agency client, `campaign_ids` set to that client's campaigns (ids from `list_campaigns` by name match, at most 10). One call gives, per campaign, the totals for the period, `day_wise` for the trend and the rates per 1,000 leads contacted. It also gives the Interested replies in the period (lead name, campaign and reply date, no email addresses) and the sending allowance for capacity context. If it says `interested_first_page_only: true`, the name list has only the first 20 threads. The positive count comes from the totals.
 - The report gives the lead's name for a positive reply, not the company. Name the company only if you know it from another source. No email addresses in a client-facing report unless asked.
 
 ## 3. Metrics (always per leads contacted)

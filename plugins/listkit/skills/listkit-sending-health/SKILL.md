@@ -21,6 +21,7 @@ Domains: 20 active · Inboxes: 38 ready, 2 disconnected ⚠️
 Today: 612 / 950 sent · Ramp: 6 inboxes still ramping (full by Tue Oct 20)
 Campaigns: 2 active, 1 paused
 ```
+Ready inboxes = `inboxes.total` minus `inboxes.disconnected` minus the ramping inboxes.
 
 ## 2. The timeline facts
 - Branded: usually set up within 12 hours (tell customers up to 72h), then 14 days warmup. Not ready after 24h with no progress = stuck: hand off with the domain names, don't keep waiting.

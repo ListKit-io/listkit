@@ -53,7 +53,7 @@ If a `request_human_help` tool exists, use it instead and tell them it's filed. 
 > I can't change billing or subscriptions, but a ListKit person can, and I've got everything they need. Open the chat in the ListKit app (bottom-right) and paste this:
 >
 > Request: [cancel / refund / credits / bug / other]
-> Account: [login email from get_me]
+> Account: [login email from the overview's `me`]
 > What I see: [one line, e.g. paid since Sep 12, 0 emails sent, 40 inboxes ready]
 > What I want: [their words]
 >
