@@ -12,7 +12,7 @@ Follow **listkit-operator** rules. Billing actions are never done for the user.
 ## 1. Health snapshot (free, parallel)
 - `get_account_health`: one read for the inboxes (total, active, disconnected), the inboxes still ramping with the days left in each ramp, the daily capacity and today's sends, the setup status of the newest domain order, and the active campaigns that sent nothing yesterday or today. It reads every mailbox page up to 500 inboxes, and says `inboxes_first_pages_only: true` past that.
 - `get_domains(action=prewarmed_claims)` / `get_domains(action=orders)` if anything is setting up. `no_active_domain_order: true` means no domain order is in progress, not that domains are ready.
-- `list_campaigns` for status (Draft, Active, Paused, Stopped, Completed). The health check counts only the active ones.
+- `get_account_overview` for the ready inbox count (`inboxes.ready`: warmed up and connected, the server's own rule) and the campaign status (Draft, Active, Paused, Stopped, Completed; the first 25 campaigns, `campaigns_first_page_only: true` past that). The health check counts only the active ones.
 - Per-inbox rows (`status`, `warmup_status` NOT_STARTED / WARMING / READY, `daily_limit`, `daily_sent_count`) only when a step below needs them: `list_mailboxes` (`limit: 100`, follow `next_cursor` to the end, then check the count against the health check's inbox total). Renewing-soon domains: `get_domains(action=stats)`.
 
 Show it as:
@@ -21,7 +21,7 @@ Domains: 20 active · Inboxes: 38 ready, 2 disconnected ⚠️
 Today: 612 / 950 sent · Ramp: 6 inboxes still ramping (full by Tue Oct 20)
 Campaigns: 2 active, 1 paused
 ```
-Ready inboxes = `inboxes.total` minus `inboxes.disconnected` minus the ramping inboxes.
+Ready inboxes = `get_account_overview` `inboxes.ready`. Do not compute it from the health check: its ramping list also has disconnected inboxes, so the groups overlap. If `inboxes_first_pages_only` is true, say that the count covers the first 500 inboxes.
 
 ## 2. The timeline facts
 - Branded: usually set up within 12 hours (tell customers up to 72h), then 14 days warmup. Not ready after 24h with no progress = stuck: hand off with the domain names, don't keep waiting.
