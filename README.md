@@ -6,10 +6,10 @@ ListKit for AI assistants: the ListKit MCP connector and the cold email skills.
 - **Claude**: install the `listkit` plugin from this repo, which bundles the connector and the skills.
 
 ```
-/plugin install listkit --marketplace ListKit-io/listkit-agent-kit
+/plugin install listkit --marketplace ListKit-io/ListKit
 ```
 
-On older Claude Code: `/plugin marketplace add ListKit-io/listkit-agent-kit`, then `/plugin install listkit@listkit`.
+On older Claude Code: `/plugin marketplace add ListKit-io/ListKit`, then `/plugin install listkit@listkit`.
 
 Updates ship when `main` changes.
 
