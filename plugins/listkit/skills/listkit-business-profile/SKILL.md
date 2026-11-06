@@ -15,7 +15,7 @@ At the start of a session, look for the stored profile (§4). If it exists, use 
 ## 2. Research before asking
 1. **Website:** read their site with your web tools (home, services, pricing, case studies, about). Free. If you can't read the site, ask the user for a one-line description instead.
 2. **Connected tools, if available and the user agrees:** ask once before reading their other connectors ("Can I check your CRM, email, calendar and docs to fill this in?") and read only what they OK. CRM (won deals: industries, titles, company sizes, deal values), email (their own sales emails and best-performing outreach), calendar (booking link, call length), docs (pitch deck, case studies), and anything they've already told you in this or past chats.
-3. **ListKit account:** `get_me`, `get_account_snapshot`, `list_campaigns` (what they've run), `list_saved_filters` (ICPs they've built), `list_exclude_lists`.
+3. **ListKit account:** `get_account_overview`: one read for the user and plan, the campaigns (what they've run), and how many saved searches (ICPs they've built) and exclude lists there are. When those counts are above 0 and you need the names, read `list_filters(action=saved)` and `get_exclusions(action=lists)`.
 Fill every field you can, and mark where each came from.
 
 ## 3. Ask only the gaps, in one message
@@ -58,7 +58,7 @@ Never store passwords, API keys, card or bank numbers, or anything the user asks
 ## 5. Use it everywhere
 - **listkit-launch-first-campaign:** skip questions the profile answers.
 - **listkit-cold-email-copywriter:** the writer brief comes straight from Offer, Proof, Guarantee, ICP words and Assets.
-- **listkit-list-builder:** ICP and lead target set the routes and the number to work back from. Exclusions go on the exclude list (`add_exclusions` or `import_exclude_list`).
+- **listkit-list-builder:** ICP and lead target set the routes and the number to work back from. Exclusions go on the exclude list (`manage_exclusions(action=add_entries)` or `manage_exclusions(action=import_list)`).
 - **listkit-reply-desk:** inbox routine setup comes from the Calls line.
 - **listkit-outbound-planner** and **listkit-results-report:** goal, deal value and close rate.
 

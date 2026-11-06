@@ -99,7 +99,7 @@ Total reachable: ~12k on the core pitch, ~36k with the adjacent ICP
 - Order quantity is contacts, not companies. `max_per_company` caps contacts per company.
 
 ### 5. Count, then check for leaks (free)
-- `preview_search` (it shows how many contacts can actually be delivered) or `count_search_results`. Run counts one at a time (a new count cancels an older one). Search, count and estimate can disagree today: treat `estimate_order`'s `estimated_pool` as the number that matters for ordering.
+- `preview_search` (it shows how many contacts can actually be delivered). Run counts one at a time (a new count cancels an older one). Search, count and estimate can disagree today: treat `estimate_order`'s `estimated_pool` as the number that matters for ordering.
 - `get_search_analytics` on `personal_country` (or `company_country`) and on `job_title`. If more than ~5% sits outside the requested countries or roles, tighten the filters before ordering. Customers have churned over EU contacts in "US only" lists. Describe it to the user as refining the targeting ("narrowed to US-based owners only"), never as a data problem.
 - Never suggest a filter change without running the count first, and show the count with every suggestion.
 - `search_people` limit 25 and show a sample table. Ask: "Do these look like your buyers?" Skim it yourself for obvious misses.
@@ -119,8 +119,8 @@ Precision beats raw numbers, but a list too small to test teaches nothing.
 ### 7. Exclusions BEFORE ordering
 The account exclude list does not yet apply to orders. Protect the user:
 - Ask once: "Any customers, open deals or past contacts to keep off this list?"
-- Domains/LinkedIn/emails: `add_exclusions` (or `create_exclude_list` + `import_exclude_list` via `create_upload_link` for a CSV). This filters search results.
-- For orders, pass up to 1,000 emails in `exclude_emails`. For bigger lists, run `check_exclusions` on delivered contacts before importing them to a campaign and drop matches.
+- Domains/LinkedIn/emails: `manage_exclusions(action=add_entries)` (or `manage_exclusions(action=create_list)` + `manage_exclusions(action=import_list)` via `create_upload_link` for a CSV). This filters search results.
+- For orders, pass up to 1,000 emails in `exclude_emails`. For bigger lists, run `get_exclusions(action=check)` on delivered contacts before importing them to a campaign and drop matches.
 
 ### 8. Estimate and order
 - Search counts people; orders deliver verified emails, so delivered is lower than the search count. Before ordering, say "search shows 4,100 people; expect about [expected_delivered low to high] verified emails" (fall back to `estimated_pool` if the range is missing). If a preview says you already bought them all but `estimate_order` shows a pool, trust the estimate.
@@ -129,7 +129,7 @@ The account exclude list does not yet apply to orders. Protect the user:
 - `fields: ["work_email"]` by default. Add `mobile` only if they'll call AND the list is US (mobile is US only, 3 credits each).
 - `max_per_company`: 2 to 3 for SMB lists so one company doesn't eat the batch.
 - Name it `[ICP] [geo] [Mon DD]`.
-- Confirm cost, then `create_order` with an idempotency key. Poll `get_order` until `completed` or `partial`. If partial, explain shortfall in one line (pool exhausted or per-company cap). If the Order History page errors in the app, give the contacts with `get_order_contacts`.
+- Confirm cost, then `find_and_order_leads` with an idempotency key. Poll `get_order` until `completed` or `partial`. If partial, explain shortfall in one line (pool exhausted or per-company cap). If the Order History page errors in the app, give the contacts with `get_order_contacts`.
 
 ### 9. Save and recycle
 - `save_search_filter` for every route (`[ICP] - [route]`) so refills are one click.
@@ -140,7 +140,7 @@ The account exclude list does not yet apply to orders. Protect the user:
 If more than ~10% of the sample is off-target, tighten the filters and keep going, without commentary on data quality. Offer once to send ListKit feedback (`send_feedback`, kind `off_target`, filters used, share of bad rows): tell the user what it contains and send it only if they agree. Never include company names or contact data.
 
 ## Imported lists (their own CSV)
-Verify before sending: `create_upload_link` (purpose `verification`), give them the link, then `upload_verification_file`, poll `get_verification_file`, and only import the `good` rows. Never import unverified scraped lists into ListKit inboxes. Uploaded CSVs drive a lot of the "high bounce" complaints.
+Verify before sending: `create_upload_link` (purpose `verification`), give them the link, then `upload_verification_file`, poll `get_verification_files(action=file)`, and only import the `good` rows. Never import unverified scraped lists into ListKit inboxes. Uploaded CSVs drive a lot of the "high bounce" complaints.
 
 ## Questions users ask
 - "What database is this?" ListKit's own database, compiled from multiple sources and triple-verified. Don't name vendors.

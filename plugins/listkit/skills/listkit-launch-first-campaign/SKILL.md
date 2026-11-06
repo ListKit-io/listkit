@@ -15,7 +15,7 @@ Follow **listkit-operator** rules for every spend.
 
 ## Step 1. Read the account (silent, no questions yet)
 
-Run in parallel: `get_onboarding_status`, `list_mailboxes` (limit 100, follow `next_cursor`), `get_domain_stats`, `get_domain_provisioning_status`, `list_campaigns`, `list_orders`, `get_account_snapshot`.
+Call `get_account_overview`. One read gives the onboarding status, the inboxes, the domains (stats and provisioning step), the campaigns, the orders, and the credits and plan. Its `inboxes` part has the counts (`ready`, `warming`, `disconnected`, `without_signature`, `signature_name_mismatch`), `ready_ids` and the latest ramp end. If it says `inboxes_first_pages_only: true`, the counts cover only the first 500 inboxes.
 
 Classify where they are:
 
@@ -23,27 +23,27 @@ Classify where they are:
 |---|---|---|
 | A. No infrastructure | 0 domains, 0 inboxes | Step 2 |
 | B. Infra provisioning | provisioning step not `ready` | Build everything now, schedule the start for when inboxes are ready |
-| C. Warming | inboxes `warmup_status` WARMING | Build everything now, schedule the start for warmup end |
-| D. Ready, nothing live | inboxes READY, 0 active campaigns | Skip any welcome tour. Go straight to the Step 3 questions, build and launch now |
+| C. Warming | inboxes still warming (`inboxes.warming` above 0) | Build everything now, schedule the start for warmup end |
+| D. Ready, nothing live | inboxes READY (`inboxes.ready` above 0), 0 active campaigns | Skip any welcome tour. Go straight to the Step 3 questions, build and launch now |
 | E. Has a real draft or paused campaign | Draft/Paused with leads or a saved sequence | Find what's missing (leads? sequence? senders? signatures?) and finish it. Ignore empty drafts, and never resume a draft the user didn't name. |
 | F. Launched, but quiet | Active campaign, nothing sent in 4+ weekdays | Run the "why isn't it sending" checklist in **listkit-sending-health** before anything else |
 
 If they open with "I have 0 credits and no idea how to start", answer the credits part in one line (credits buy leads, they don't limit sending, here's your balance and reset date) and keep going with this flow.
 
-`get_onboarding_status` `completed` only means they subscribed. Campaign state comes from `list_campaigns`.
+The overview's `onboarding` `completed` only means they subscribed. Campaign state comes from its `campaigns` rows.
 
 Tell them in one sentence where they are and the date they can send. Example: "Your 40 inboxes finish warmup on Thu Oct 22, so we'll build your first campaign now and schedule it to start that morning."
 
 ## Step 2. Infrastructure (only if state A)
 
-- `check_prewarmed_availability` with their bundle count, then present both options neutrally. Don't push either as the default:
+- `get_domains(action=prewarmed_availability)` with their bundle count, then present both options neutrally. Don't push either as the default:
   - Pre-warmed (.info domains): sending in minutes, then the 7-sending-day ramp. Gets them sending sooner, but hasn't retained better: pre-warmed customers who rush a list out and see no quick result leave faster.
   - Branded (domains close to their brand): usually set up within 12 hours (tell them up to 72h), then 14 days warmup, then the same ramp.
 - If `can_fulfill` is false: don't apologize and don't promise inboxes from anywhere else. "Pre-warmed is out of stock right now. With branded domains you'll send your first email on [date] and hit full volume around [date]. Let's build the campaign now so it starts that morning."
 - If they bought pre-warmed and ask why checkout said "14-day warmup begins": that line doesn't apply to pre-warmed domains. Give their real dates.
 - Let them choose.
-- Pre-warmed: `pick_prewarmed_domains` then ask for 1 to 2 sender personas (first + last name, real person who'll reply) and a redirect URL (their website). Confirm, then `claim_prewarmed_domains` with an idempotency key.
-- Branded: `search_new_domains` on their brand word, pick names, `draft_domain_order` (each domain listed by exactly 2 senders with different usernames, Google provider), confirm, `confirm_domain_order`.
+- Pre-warmed: `get_domains(action=prewarmed_pick)` then ask for 1 to 2 sender personas (first + last name, real person who'll reply) and a redirect URL (their website). Confirm, then `claim_prewarmed_domains` with an idempotency key.
+- Branded: `get_domains(action=search_new)` on their brand word, pick names, `draft_domain_order` (each domain listed by exactly 2 senders with different usernames, Google provider), confirm, `confirm_domain_order`.
 - Don't wait for infra to finish. Move on and build the campaign now.
 
 ## Step 3. The 5-question ICP interview
@@ -72,7 +72,7 @@ Target for campaign 1: **2,000 to 3,000 verified leads** (never under 1,000), on
 
 Map the whole TAM while you're at it (list-builder §3c): every route, a count per route, a saved filter per route. Order the first test batch from the tightest route now; the rest is the runway for campaign 2 onward. Tell the user how many people they can reach in total, so they know the market won't run dry.
 
-Quick recipe: `expand_job_titles` → industry or keywords (see list-builder §3) → `find_filter_values` for countries → `count_search_results` → `get_search_analytics` on `personal_country` to make sure nothing leaks outside their countries → show 10 sample rows → `estimate_order` → confirm → `create_order` with `fields: ["work_email"]`.
+Quick recipe: `expand_job_titles` → industry or keywords (see list-builder §3) → `find_filter_values` for countries → `preview_search` → `get_search_analytics` on `personal_country` to make sure nothing leaks outside their countries → show 10 sample rows → `estimate_order` → confirm → `find_and_order_leads` with `fields: ["work_email"]`.
 
 Warming? If the first send is within ~7 days, order now so leads are waiting. If it's further out (branded domains), build the list, save the filter and show the estimate now, then order about a week before the start date so the emails are freshly verified. Finish everything else now (sequence, senders, signatures, schedule) and offer a one-time scheduled task for ~7 days before the start that re-checks the estimate, prepares the order and import with their cost, and notifies the user. The order and import run only after the user's yes and the server's confirmation.
 
@@ -89,7 +89,7 @@ Sending: all 40 ready inboxes attached, signatures set where missing,
   Mon to Fri, 8am to 5pm ET, START on Thu Oct 22
 Go?
 ```
-If starting the campaign reserves credits (`get_campaign_credits_info` `credits_needed`, or a `commitment_warning`), you'll check that before START in Step 7. If it's more than the plan above, show it and get a yes before starting.
+If starting the campaign reserves credits, the `launch_campaign` confirmation in Step 7 says up to how many (and any commitment warning), and you'll check that before START. The leads go in before the launch, so that figure counts them. If it's more than the plan above, show it and get a yes before starting.
 This yes covers exactly the plan above. Each spend call still goes through the server's confirmation. Anything not in the block, or costing more, needs a new yes.
 
 ## Step 6. Write the sequence (hand the method to listkit-cold-email-copywriter)
@@ -101,11 +101,17 @@ This yes covers exactly the plan above. Each spend call still goes through the s
 
 ## Step 7. Assemble and launch
 
-1. Add leads once the order completes: poll `get_order`, then `import_leads_from_orders` (`order_ids`, `campaign_ids`), then `get_lead_import_status` until done. Read `statistics` (`upload_count` added, `duplicate_count`, `block_count`, `bounce_count`). If added is under 80% of what you sent, say so in one line ("1,240 of 2,000 went in: 700 were already in another campaign"). Don't call the campaign ready until 1,000+ were added. If most of the drop is duplicates from the user's OTHER campaigns, ask before re-importing with `ignore_duplicate_leads_in_other_campaign: true`. Never set `ignore_global_block_list` or `ignore_community_bounce_list` to true unless the user asks.
-2. Senders: attach EVERY sending-ready inbox on the account (`list_mailboxes` with `limit: 100`, following `next_cursor` to the end, all with `warmup_status` READY and not disconnected; check the total against `get_domain_stats`) via `update_campaign` or `set_campaign_senders` with the full list. That's the default for every campaign, so it can use the account's full capacity. Only use fewer if the user explicitly asks to split inboxes between campaigns or clients.
+Add the leads first, then one `launch_campaign` call attaches the senders, saves the schedule and STARTs. The user approves it once, and ListKit's confirmation names every step and its cost.
+
+1. Add leads once the order completes: poll `get_order`, then `add_order_contacts_to_campaign` (`order_ids`, `campaign_ids`), then `get_leads(action=import_status)` until done (the `file_id` is in the import answer's `imports`). Read `statistics` (`upload_count` added, `duplicate_count`, `block_count`, `bounce_count`). If added is under 80% of what you sent, say so in one line ("1,240 of 2,000 went in: 760 were duplicates or on the block list"). Don't call the campaign ready until 1,000+ were added, and don't launch it before that: fill it first. People who are already leads in the user's OTHER campaigns go in by default (`ignore_duplicate_leads_in_other_campaign: false`). `true` LEAVES OUT every contact that is already a lead in another campaign: set it only if the user asks to keep those people out, and ask before you re-import with it. Never set `ignore_global_block_list` or `ignore_community_bounce_list` to true unless the user asks.
+2. Senders: `senders: "all_ready"` attaches EVERY sending-ready inbox on the account (warmed up and connected, from every page of the mailbox list). That's the default for every campaign, so it can use the account's full capacity. Only use fewer if the user explicitly asks to split inboxes between campaigns or clients: then pass those inboxes' ids from `list_mailboxes`. If the inboxes are still warming (state C), `"all_ready"` finds none and refuses. Then pass the ids of the warming inboxes from `list_mailboxes` that are connected and whose signature names their sender, and use `get_account_health` for the date they are ready. If the account has no inboxes yet (state B), finish everything else and launch once the inboxes exist (offer a one-time scheduled task for that date).
 3. Schedule: `time_zone` = the prospects' IANA zone (e.g. `America/New_York`), `days_of_week` [1,2,3,4,5] (0 = Sunday), `start_hour` "08:00", `end_hour` "17:00", `schedule_start_time` as a full ISO 8601 datetime (e.g. `2026-10-22T08:00:00-04:00`), never a bare date. Start = now if inboxes are ready, else the warmup end date.
-4. Signatures (blocking): every attached inbox needs a signature that matches its sender (`list_mailboxes` `signature`). If any are empty or wrong (a test signature, a different name), set one with `set_mailbox_signature` (confirm, under 350 characters, name + title + company). Don't launch with blank signatures.
-5. `get_campaign_credits_info` to make sure nothing blocks it, then START the campaign yourself (`update_campaign` status START, or `set_campaign_status`). The user already said yes to the plan. Don't leave it in Draft for them to click.
+4. Signatures (blocking): every attached inbox needs a signature that matches its sender. Step 1's `inboxes.without_signature` and `inboxes.signature_name_mismatch` count the empty and mismatched ones. To see which inboxes they are, and to catch a wrong one (a test signature, a different name), read `signature` with `list_mailboxes` (`limit: 100`, follow `next_cursor`). If any are empty or wrong, set one with `update_mailboxes(action=signature)` (confirm, under 350 characters, name + title + company). Don't launch with blank signatures.
+5. Launch: `launch_campaign` with `id`, `senders: "all_ready"`, `schedule` and a new `idempotency_key` (e.g. `launch-2026-10-22-dental-us`), without `order_ids` (the leads are in from item 1). If the Step 5 plan set a credit limit for START, pass it as `max_credits`: the tool does not START above it. Start the campaign yourself: the user already said yes to the plan. Don't leave it in Draft for them to click.
+   - Before it asks, the tool checks the senders. If a sender has a blank signature, it refuses and names those inboxes. Tell the user what the refusal says (which inboxes have no signature), set a signature on each as in item 4, then call `launch_campaign` again.
+   - Its confirmation says how many inboxes `"all_ready"` takes (check that against `inboxes.ready` from Step 1) and which it leaves out because their signature names someone other than the sender. Tell the user which were left out, and fix their signatures if the user wants them on the campaign.
+   - The confirmation also says up to how many credits START reserves, with any commitment warning. If it's more than the Step 5 plan, show it and get a yes before starting.
+   - If it stops at a step, it says which steps ran and what to do next. Follow that.
 6. Read it back with `list_campaigns` and confirm the status is Active (or scheduled for the ready date).
 
 If inboxes are still warming, start it with the schedule set to the warmup end date and say exactly when it goes out.
@@ -119,7 +125,7 @@ If inboxes are still warming, start it with the schedule set to the warmup end d
 - "This works on volume and testing: keep 2 to 4 campaigns of 2,000+ leads live, and launch a new test every week."
 - "The goal for your first 3 weeks of sending is your first handful of interested replies, answered within minutes."
 
-If `get_onboarding_status` shows the strategy call isn't done, give them the link before you finish and suggest a date. It's part of getting set up, not optional.
+If the overview's `onboarding` (Step 1) shows the strategy call isn't done, give them the link before you finish and suggest a date. It's part of getting set up, not optional.
 
 Then book the review: offer a calendar reminder for a results check ~21 days after first send, the window that decides whether customers stay (use their calendar connector if they have one). That review should be with this same workflow: run **listkit-campaign-doctor**.
 

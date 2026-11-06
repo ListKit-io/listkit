@@ -10,12 +10,10 @@ Most "no results" isn't the platform. It's not enough tests, not enough volume, 
 Follow **listkit-operator** rules. Read-only analysis needs no confirmation.
 
 ## 1. Pull the data (parallel, free)
-- `list_campaigns` (status + totals)
-- For each active or recent campaign: `get_campaign_analytics` (since launch) and `get_campaign_analytics_day_wise` (last 21 days)
-- `get_campaign_sequence` for the top campaigns
-- `list_mailboxes` (status, warmup, daily_sent_count vs daily_limit)
-- `get_usage_allowance`
-- `list_inbox_threads` on the Interested folder (folder id from `list_inbox_folders`)
+- `get_campaigns_report` without `start_date` or `end_date`, so the range is the tool's default: the last 30 days, UTC. A longer range makes the answer too large. One call reads the Active and most recent campaigns (at most 10). Per campaign it gives status, leads, the totals for the range and `day_wise` (use the last 21 days for the trend). It also gives the sequence shape (steps, variants per step, spintax) and the rates per 1,000 leads contacted with the sample flags. The Interested replies and the allowance are in the same answer. If it says `campaigns_capped: true`, or you need other campaigns, pass their ids (from `list_campaigns`) in `campaign_ids`.
+- If a campaign started before the range, tell the user that its totals and rates cover only the last 30 days. Apply the thresholds below to these range counts.
+- `get_account_health` (inbox status, warmup, daily capacity). The report does not read the inboxes.
+- `get_campaign_sequence` only when you need the copy itself (the report gives the sequence shape, not the copy)
 
 ## 2. Do the math (per LEADS, not emails)
 For each campaign and the account total:
@@ -23,7 +21,7 @@ For each campaign and the account total:
 - Reply rate = replies / leads contacted (analytics now return a per-lead reply rate: use that field, never the per-email one)
 - Positive rate = interested / leads contacted, and **positives per 1,000 leads**
 - Bounce rate, and whether it's concentrated in one campaign
-- Sends per day vs capacity (daily limit x READY inboxes)
+- Sends per day (the average of the recent full weekdays in `day_wise`) vs capacity (`get_account_health` `capacity.daily_capacity`, the daily limits of the connected inboxes). Don't use `capacity.sent_today`: it is a partial day.
 - Variants per step, spintax yes/no, number of live campaigns
 
 `interested` or `unique_leads_contacted` = null on a day means not fetched, not zero.
@@ -43,7 +41,7 @@ Positives are rare (about 1 per 1,000 leads), so small samples lie. At 1,000 lea
 | 1 | Sending at all? | 0 sends 48h+, or far under capacity | Infra or setup | Hand off to **listkit-sending-health**. Check campaigns paused, no leads left, inboxes disconnected or stuck. |
 | 2 | Enough volume? | Sending under ~50% of capacity, 1 small campaign | Starved machine | Hand off to **listkit-volume-engine**. More lists, more campaigns. |
 | 3 | Reply rate | Under 1% after 1,000+ leads | Deliverability | Check variants/spintax (1 variant, no spintax = sender bounce). Rebuild with 4/2/2 variants + spintax via the copywriter, lower per-inbox daily limit if it was raised above 25, duplicate campaign with re-verified leads. If bounce is high on their own CSV, verify it. |
-| 4 | Positive rate | Replies 1%+ but under ~0.5 positives per 1,000 leads (after 3,000+ leads) | Offer or targeting | Read the replies: mostly "not interested" or unsubscribes = offer; "wrong person" = targeting. New angle, easier yes (free deliverable), tighter niche list. New campaign, not just a tweak. |
+| 4 | Positive rate | Replies 1%+ but under ~0.5 positives per 1,000 leads (after 3,000+ leads) | Offer or targeting | Read the replies (`get_inbox(action=threads)` for previews, or `get_inbox_thread_messages`, which marks a thread read): mostly "not interested" or unsubscribes = offer; "wrong person" = targeting. New angle, easier yes (free deliverable), tighter niche list. New campaign, not just a tweak. |
 | 5 | Booked rate | Positives exist but under 40% booked | Follow-up | Hand off to **listkit-reply-desk**. Speed to lead (under 5 min), two specific times, follow up every 1 to 2 days, multichannel. |
 | 6 | All healthy | Benchmarks met | Scale | Duplicate the winner, new lists, new ICPs. See **listkit-volume-engine**. |
 
@@ -83,7 +81,7 @@ Then ask: "Want me to do 1 and 2?" and execute with the normal confirmations.
 - Rewrite with 4 variants + spintax: **listkit-cold-email-copywriter**, then `save_campaign_sequence` (read first, it replaces everything).
 - New angle as a new campaign: `duplicate_campaign`, new sequence, fresh list.
 - Fresh list for a winner: **listkit-list-builder**, then import.
-- Kill a loser (3,000+ leads, confirmed): pause via `update_campaign` / `set_campaign_status` PAUSED (confirm). PAUSED, not STOPPED: STOPPED can't be undone.
+- Kill a loser (3,000+ leads, confirmed): pause via `update_campaign` with status PAUSED (confirm). PAUSED, not STOPPED: STOPPED can't be undone.
 - Reply backlog: **listkit-reply-desk**.
 
 ## 7. Tone
