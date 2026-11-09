@@ -25,7 +25,7 @@ Follow **listkit-operator** rules. Keywords describe the market the user asked f
 4. Order it core identity → sub-categories → verticals → adjacent, so the tail is easy to cut.
 
 ## 2. Prove it before ordering (free)
-- Search with the core and sub-category terms first, then add the tail only if the pool is under target (list-builder §6). `count_search_results` or `preview_search` after each change, and show the count with every suggestion.
+- Search with the core and sub-category terms first, then add the tail only if the pool is under target (list-builder §6). `preview_search` after each change, and show the count with every suggestion.
 - `search_people` limit 25 and skim the sample. `get_search_analytics` on industry shows what the cluster actually pulled.
 - In ORDERS, industry plus keywords means a company must match BOTH. For a niche, order on keywords alone; for a clear industry, order on the industry alone (list-builder §3). `estimate_order` is the truth.
 

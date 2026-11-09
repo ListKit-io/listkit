@@ -11,11 +11,9 @@ Agencies keep clients by communicating progress before the client has to ask. Th
 Ask only if unclear: period (default last 7 days), which campaigns (default all active; for agencies, the client's campaigns by name match), audience (owner or client).
 
 ## 2. Pull (free)
-- `list_campaigns`
-- `get_campaign_analytics` for the period, per campaign
-- `get_campaign_analytics_day_wise` for trend
-- Interested threads: `list_inbox_threads` filtered to the Interested category, for names/companies of positive replies (no email addresses in a client-facing report unless asked)
-- `list_mailboxes` for capacity context
+- Find the campaigns in scope first: `list_campaigns` (`limit: 100`, follow `next_cursor` to the end), then keep the active ones, or for an agency client the client's campaigns by name match.
+- `get_campaigns_report` with `campaign_ids` set to those ids, in batches of at most 10, and the same `start_date` and `end_date` (the period) in every batch. Add the totals of all batches before you compute any rate. If an answer says `campaigns_capped: true`, a batch had more than 10 ids: call again for the rest. Each call gives, per campaign, the totals for the period, `day_wise` for the trend and the rates per 1,000 leads contacted. It also gives the Interested replies in the period (lead name, campaign and reply date, no email addresses) and the sending allowance for capacity context. The names come from the newest 20 Interested threads only, filtered to the period. So for a past period, the list can be empty while the totals show positive replies. Always take the positive count from the totals, and name leads only when the list has them.
+- The report gives the lead's name for a positive reply, not the company. Name the company only if you know it from another source. No email addresses in a client-facing report unless asked.
 
 ## 3. Metrics (always per leads contacted)
 - Leads contacted, emails sent
