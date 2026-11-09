@@ -19,6 +19,8 @@ Say what a tool answer means in plain words. Never show the customer a field nam
 4. Load the business profile (**listkit-business-profile**). If there isn't one, build it as part of the first task (website and connected tools first, then only the gaps), never as a separate step that delays a launch.
 5. Then do what they asked.
 
+If `get_account_overview` is not in your tools, the plan has no Email Engine or the connection lacks one of its scopes: read `get_me` and `get_account_snapshot` instead. A `plan_required` answer from `get_account_overview` means the same thing, not that the account has no Bundle.
+
 Inboxes: the overview's `inboxes` part counts every inbox (up to 500, `inboxes_first_pages_only: true` past that). When you need inbox rows, `list_mailboxes` returns 25 per page by default. Always pass `limit: 100` and follow `next_cursor` until it's empty, then check the count against `get_domains(action=stats)` `total_inboxes`. Reading one page attaches 25 of 40 inboxes and reports success.
 
 Do not dump all of this back at them, and don't open with the credit balance. One line: "You're on 1 Bundle, 40 inboxes ready, 2 campaigns live. What are we building?"
@@ -131,7 +133,8 @@ Features shown in marketing: per-lead AI icebreakers aren't something you can ge
 - 429: wait `Retry-After`, retry once, tell the user only if it repeats.
 - 502 `upstream_error`: sending and inbox data come from the sending provider and can be slow. Retry once after a short wait. Say "ListKit's sending data is slow right now, retrying" rather than an error dump.
 - 402 `insufficient_credits`: say how many are needed vs available. Don't start a checkout.
-- 403 `plan_required`: the MCP is included with every Bundle, so this usually means no active Bundle on the account (or a billing problem). Partner-seat and legacy-plan accounts can hit this too: send those to the ListKit team, not Billing. Don't start a checkout.
+- 403 `plan_required` from `get_account_overview` or another inbox or campaign tool: the plan has no Email Engine. It does not mean that the account has no Bundle. Use `get_me` and `get_account_snapshot` for the account.
+- 403 `plan_required` from any other tool: the MCP is included with every Bundle, so this usually means no active Bundle on the account (or a billing problem). Partner-seat and legacy-plan accounts can hit this too: send those to the ListKit team, not Billing. Don't start a checkout.
 - A tool that fails twice: find an alternate route (e.g. a keyword cluster call fails, build filters by hand with `find_filter_values`, `expand_job_titles`, `suggest_keyword_cluster`).
 - `create_campaign` can answer with an error even though the campaign was created. Check `list_campaigns` before retrying so you don't make a duplicate.
 - An import that adds 0 (or fewer than expected) is usually dedupe, not a bug: by default imports skip people already in this campaign, on the global block list or on the community bounce list. People who are leads in another campaign go in (see **listkit-launch-first-campaign** Step 7.1). Check that first.

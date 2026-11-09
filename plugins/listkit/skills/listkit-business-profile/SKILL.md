@@ -15,7 +15,7 @@ At the start of a session, look for the stored profile (§4). If it exists, use 
 ## 2. Research before asking
 1. **Website:** read their site with your web tools (home, services, pricing, case studies, about). Free. If you can't read the site, ask the user for a one-line description instead.
 2. **Connected tools, if available and the user agrees:** ask once before reading their other connectors ("Can I check your CRM, email, calendar and docs to fill this in?") and read only what they OK. CRM (won deals: industries, titles, company sizes, deal values), email (their own sales emails and best-performing outreach), calendar (booking link, call length), docs (pitch deck, case studies), and anything they've already told you in this or past chats.
-3. **ListKit account:** `get_account_overview`: one read for the user and plan, the campaigns (what they've run), and how many saved searches (ICPs they've built) and exclude lists there are. When those counts are above 0 and you need the names, read `list_filters(action=saved)` and `get_exclusions(action=lists)`.
+3. **ListKit account:** `get_account_overview`: one read for the user and plan, the campaigns (what they've run), and how many saved searches (ICPs they've built) and exclude lists there are. When those counts are above 0 and you need the names, read `list_filters(action=saved)` and `get_exclusions(action=lists)`. If `get_account_overview` is not in your tools, the plan has no Email Engine or the connection lacks one of its scopes: read `get_me` and `get_account_snapshot` instead. A `plan_required` answer from `get_account_overview` means the same thing, not that the account has no Bundle.
 Fill every field you can, and mark where each came from.
 
 ## 3. Ask only the gaps, in one message
