@@ -25,7 +25,13 @@ This check replaces the usual session start. Do not run the **listkit-operator**
 
 This skill runs, so the plugin is loaded. "ListKit skills loaded" is always checked.
 
-Pick the client from what you can see. You have a terminal or file tools: Claude Code. Else: Claude (chat, Desktop or Cowork).
+Pick the client from what your system prompt says you are. Tools do not tell you the client: Cowork and Claude chat with code execution also have a terminal and file tools.
+
+| Your system prompt says | Client |
+|---|---|
+| You are Claude Code | Claude Code |
+| Cowork, claude.ai, the Claude app or Claude Desktop | Claude |
+| Neither | Both: give the text for each client, under the labels **In Claude (chat, Desktop or Cowork):** and **In Claude Code:** |
 
 ## 3. Install works
 
@@ -39,7 +45,7 @@ Your ListKit install works. Signed in as <email>.
 - [x] ListKit skills loaded
 ```
 
-Then give the permission advice for the client:
+Then give the permission advice for the client (for Both, give the two texts under their labels):
 
 - **Claude:** "So Claude does not ask before each ListKit read: open the ListKit connector. Under **Tool permissions**, set **Read-only tools** to **Always allow**. Keep **Write/delete tools** on **Needs approval**, so Claude still asks before orders, sends and deletes."
 - **Claude Code:** "Claude Code asks before each ListKit tool until you add the ListKit allow rule. The Claude Code section of https://developer.listkit.io has a prompt that adds it. Paste that prompt here, and I add the rule after your yes."
@@ -50,7 +56,7 @@ If `first_connection` is true, add one line with `walkthrough_video_url` and `st
 
 ## 4. A step failed
 
-Show the same list. Mark the failed step `- [ ]`. A step after it that you could not check gets "(not checked)". Then give the fix for the client and stop.
+Show the same list. Mark the failed step `- [ ]`. A step after it that you could not check gets "(not checked)". Then give the fix for the client (for Both, give the two fixes under their labels) and stop.
 
 | Failed step | Claude | Claude Code |
 |---|---|---|
