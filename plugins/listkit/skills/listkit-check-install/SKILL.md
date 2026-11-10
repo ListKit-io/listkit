@@ -21,7 +21,8 @@ This check replaces the usual session start. Do not run the **listkit-operator**
 | `get_me` answers with an `email` | Install works (§3) |
 | ListKit has only an `authenticate` tool, or `get_me` answers that sign-in is needed (401, unauthorized) | Not signed in (§4) |
 | There is no ListKit tool | Connector not connected (§4) |
-| `get_me` fails in a different way | ListKit did not answer. Tell the user to try again in a minute. If it fails again, they write to support@listkit.io. |
+| `get_me` answers `payment_required` (402) or `plan_required` (403) | Plan or billing (§5) |
+| `get_me` fails in a different way (a 5xx answer or a timeout) | ListKit did not answer. Tell the user to try again in a minute. If it fails again, they write to support@listkit.io. |
 
 This skill runs, so the plugin is loaded. "ListKit skills loaded" is always checked.
 
@@ -62,5 +63,22 @@ Show the same list. Mark the failed step `- [ ]`. A step after it that you could
 |---|---|---|
 | Connector connected | Open **Plugins**, then **ListKit**. On its **Connectors** tab, connect ListKit. Start a new chat. | Run `/mcp`. If `plugin:listkit:listkit` is not in the list or shows failed, restart Claude Code and run `/mcp` again. |
 | Signed in to ListKit | Open the ListKit connector and click **Connect**. Sign in with your ListKit account. Start a new chat. | Run `/mcp`, choose `plugin:listkit:listkit` and select **Authenticate**. Sign in with your ListKit account. |
+
+End with: "Then paste `Check my ListKit install` again."
+
+## 5. Plan or billing
+
+The connector works and the user is signed in, but the ListKit account cannot use ListKit from Claude yet. Waiting does not fix it. Send this:
+
+```
+ListKit is installed, but your ListKit account needs attention first.
+
+- [x] Connector connected
+- [x] Signed in to ListKit
+- [x] ListKit skills loaded
+- [ ] ListKit plan active
+```
+
+Then say in one sentence what the `get_me` message says, for example "Your ListKit account has an unpaid invoice." Tell the user to fix it at https://next.listkit.io/billing. This step is the same in every client. Do not tell the user to try again, and do not call `get_me` again in this turn.
 
 End with: "Then paste `Check my ListKit install` again."
