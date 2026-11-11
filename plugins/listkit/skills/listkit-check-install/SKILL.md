@@ -46,12 +46,12 @@ Your ListKit install works. Signed in as <email>.
 - [x] ListKit skills loaded
 ```
 
-Then give the permission advice for the client (for Both, give the two texts under their labels):
+Then give the permission note for the client (for Both, give the two texts under their labels):
 
-- **Claude:** "So Claude does not ask before each ListKit read: open the ListKit connector. Under **Tool permissions**, set **Read-only tools** to **Always allow**. Keep **Write/delete tools** on **Needs approval**, so Claude still asks before orders, sends and deletes."
+- **Claude:** "By default, Claude runs the ListKit tools that only read without asking you. It asks before each tool that writes, for example a new campaign, an order or a send. You can change this in the ListKit connector, under **Tool permissions**."
 - **Claude Code:** "Claude Code asks before each ListKit tool until you add the ListKit allow rule. The Claude Code section of https://developer.listkit.io has a prompt that adds it. Paste that prompt here, and I add the rule after your yes."
 
-You cannot read the permission settings. Never say that you checked them, or that they are set or not set. Give the advice as a step "if you did not do it yet".
+You cannot read the permission settings. Never say that you checked them, or that they are set or not set. Give the Claude Code advice as a step "if you did not do it yet".
 
 If `first_connection` is true, add one line with `walkthrough_video_url` and `strategy_call_url`. End with one question: what they want to work on first.
 
