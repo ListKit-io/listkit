@@ -15,13 +15,13 @@ Follow **listkit-operator** rules for every spend.
 
 ## Step 1. Read the account (silent, no questions yet)
 
-Call `get_account_overview`. One read gives the onboarding status, the inboxes, the domains (`domains.stats`, the provisioning step `domains.provisioning.step` and the newest domain order `domains.latest_order`), the campaigns, the orders, and the credits and plan. The overview already has the domain state, so don't read `get_domains(action=orders)` or `get_domains(action=domains)` in this skill, except for a failed order (state H). Its `inboxes` part has the counts (`ready`, `warming`, `disconnected`, `without_signature`, `signature_name_mismatch`), `ready_ids` and the latest ramp end. If it says `inboxes_first_pages_only: true`, the counts cover only the first 500 inboxes.
+Call `get_account_overview`. One read gives the onboarding status, the inboxes, the domains (`domains.stats`, the provisioning step `domains.provisioning.step` and the newest domain order `domains.latest_order`), the campaigns, the orders, and the credits and plan. The overview already has the domain state, so don't read `get_domains(action=orders)` or `get_domains(action=domains)` in this skill, except for a failed order (state H) or a failed overview read of the orders (`errors.domain_orders`). Its `inboxes` part has the counts (`ready`, `warming`, `disconnected`, `without_signature`, `signature_name_mismatch`), `ready_ids` and the latest ramp end. If it says `inboxes_first_pages_only: true`, the counts cover only the first 500 inboxes.
 
 Classify where they are:
 
 | State | What you see | Path |
 |---|---|---|
-| A. No infrastructure | 0 domains, 0 inboxes, `domains.latest_order` null or `cancelled` | Step 2 |
+| A. No infrastructure | 0 domains, 0 inboxes, `domains.latest_order` null or `cancelled`, no `errors.domain_orders` | Step 2 |
 | B. Infra provisioning | provisioning step not `ready`, or `domains.latest_order.status` `pending` or `active` with 0 inboxes | Build everything now, schedule the start for when inboxes are ready |
 | C. Warming | inboxes still warming (`inboxes.warming` above 0) | Build everything now, schedule the start for warmup end |
 | D. Ready, nothing live | inboxes READY (`inboxes.ready` above 0), 0 active campaigns | Skip any welcome tour. Go straight to the Step 3 questions, build and launch now |
@@ -30,13 +30,17 @@ Classify where they are:
 | G. Unconfirmed domain order | `domains.latest_order.status` `draft` | They drafted a branded order and didn't confirm it. Offer to finish that order: tell them its `domain_count` and the day they drafted it (`created_at`), confirm, then `confirm_domain_order` with its `id`. Don't start a new order |
 | H. Failed domain order | `domains.latest_order.status` `failed` | Read `get_domains(action=orders)` one time for that order's `failure_kind` and `can_retry`, and tell them what happened (below) |
 
+Check A to F first. G and H apply only when none of A to F matches, so inboxes that are ready, warming or set up from an older order always come first.
+
 For state H, `failure_kind` means:
 - `temporary_retrying`: a vendor fault that ListKit retries automatically. Treat it as state B.
 - `pool_exhausted`: the pre-warmed pool couldn't cover it. Offer the branded option of Step 2.
-- `needs_user_fix`: the request was rejected. It can be fixed and sent again.
+- `needs_user_fix`: the request was rejected. It can be fixed and sent again, but no field says what to fix. Don't confirm it again unchanged. Offer `request_human_help` with a summary.
 - `needs_support`: ListKit has to resolve it. Offer `request_human_help` with a summary.
 
-If `can_retry` is true, offer to confirm it again: `confirm_domain_order` with its `id` and a new `idempotency_key`. If `can_retry` is false, don't try it again.
+If `can_retry` is true and the kind is not `needs_user_fix`, offer to confirm it again: `confirm_domain_order` with its `id` and a new `idempotency_key`. If `can_retry` is false, don't try it again.
+
+If the overview has `errors.domain_orders`, `latest_order` is null because the read failed, not because there is no order. Read `get_domains(action=orders)` one time and classify with its newest order before you go to Step 2.
 
 If they open with "I have 0 credits and no idea how to start", answer the credits part in one line (credits buy leads, they don't limit sending, here's your balance and reset date) and keep going with this flow.
 
@@ -44,7 +48,7 @@ The overview's `onboarding` `completed` only means they subscribed. Campaign sta
 
 Tell them in one sentence where they are and the date they can send. Example: "Your 40 inboxes finish warmup on Thu Oct 22, so we'll build your first campaign now and schedule it to start that morning."
 
-## Step 2. Infrastructure (only if state A)
+## Step 2. Infrastructure (only if state A, or state H with `pool_exhausted`)
 
 - `get_domains(action=prewarmed_availability)` with their bundle count, then present both options neutrally. Don't push either as the default:
   - Pre-warmed (.info domains): sending in minutes, then the 7-sending-day ramp. Gets them sending sooner, but hasn't retained better: pre-warmed customers who rush a list out and see no quick result leave faster.
