@@ -16,6 +16,8 @@ Requires a ListKit Bundle.
 - **Claude Code:** run `claude plugin install listkit --marketplace ListKit-io/ListKit` in your terminal (Claude Code 2.1.292 or later). Then run `/mcp`, choose `plugin:listkit:listkit` and **Authenticate**.
 - **Any other AI tool:** add the MCP server `https://developer.listkit.io/mcp` and sign in with your ListKit account.
 
+In Claude Code, the setup prompt on developer.listkit.io also offers to add the ListKit allow rule to `~/.claude/settings.json`. It asks you before it changes the file. A plugin cannot add permission rules itself, so the prompt does it. With the rule, Claude Code runs the ListKit tools that only read, and the free writes, without asking you each time. A free write does not spend credits, send email or delete. The rule also lets Claude Code send feedback or a help request to the ListKit team without asking. Tools that spend credits, send email or delete still ask each time. You can remove the entries at any time with `/permissions`.
+
 ## Data
 
 The plugin sends your requests to your ListKit account through ListKit's MCP server (search filters, campaign content, inbox replies and account actions you approve). ListKit processes that data under its terms and privacy policy at listkit.io. The plugin itself stores nothing and runs no code on your machine: it is skills (instructions for Claude) plus one connection to ListKit's MCP server. Privacy policy: [listkit.io/privacy](https://listkit.io/privacy). Support: support@listkit.io

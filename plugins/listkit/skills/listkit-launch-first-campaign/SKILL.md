@@ -15,18 +15,28 @@ Follow **listkit-operator** rules for every spend.
 
 ## Step 1. Read the account (silent, no questions yet)
 
-Call `get_account_overview`. One read gives the onboarding status, the inboxes, the domains (stats and provisioning step), the campaigns, the orders, and the credits and plan. Its `inboxes` part has the counts (`ready`, `warming`, `disconnected`, `without_signature`, `signature_name_mismatch`), `ready_ids` and the latest ramp end. If it says `inboxes_first_pages_only: true`, the counts cover only the first 500 inboxes.
+Call `get_account_overview`. One read gives the onboarding status, the inboxes, the domains (`domains.stats`, the provisioning step `domains.provisioning.step` and the newest domain order `domains.latest_order`), the campaigns, the orders, and the credits and plan. The overview already has the domain state, so don't read `get_domains(action=orders)` or `get_domains(action=domains)` in this skill, except for a failed order (state H). Its `inboxes` part has the counts (`ready`, `warming`, `disconnected`, `without_signature`, `signature_name_mismatch`), `ready_ids` and the latest ramp end. If it says `inboxes_first_pages_only: true`, the counts cover only the first 500 inboxes.
 
 Classify where they are:
 
 | State | What you see | Path |
 |---|---|---|
-| A. No infrastructure | 0 domains, 0 inboxes | Step 2 |
-| B. Infra provisioning | provisioning step not `ready` | Build everything now, schedule the start for when inboxes are ready |
+| A. No infrastructure | 0 domains, 0 inboxes, `domains.latest_order` null or `cancelled` | Step 2 |
+| B. Infra provisioning | provisioning step not `ready`, or `domains.latest_order.status` `pending` or `active` with 0 inboxes | Build everything now, schedule the start for when inboxes are ready |
 | C. Warming | inboxes still warming (`inboxes.warming` above 0) | Build everything now, schedule the start for warmup end |
 | D. Ready, nothing live | inboxes READY (`inboxes.ready` above 0), 0 active campaigns | Skip any welcome tour. Go straight to the Step 3 questions, build and launch now |
 | E. Has a real draft or paused campaign | Draft/Paused with leads or a saved sequence | Find what's missing (leads? sequence? senders? signatures?) and finish it. Ignore empty drafts, and never resume a draft the user didn't name. |
 | F. Launched, but quiet | Active campaign, nothing sent in 4+ weekdays | Run the "why isn't it sending" checklist in **listkit-sending-health** before anything else |
+| G. Unconfirmed domain order | `domains.latest_order.status` `draft` | They drafted a branded order and didn't confirm it. Offer to finish that order: tell them its `domain_count` and the day they drafted it (`created_at`), confirm, then `confirm_domain_order` with its `id`. Don't start a new order |
+| H. Failed domain order | `domains.latest_order.status` `failed` | Read `get_domains(action=orders)` one time for that order's `failure_kind` and `can_retry`, and tell them what happened (below) |
+
+For state H, `failure_kind` means:
+- `temporary_retrying`: a vendor fault that ListKit retries automatically. Treat it as state B.
+- `pool_exhausted`: the pre-warmed pool couldn't cover it. Offer the branded option of Step 2.
+- `needs_user_fix`: the request was rejected. It can be fixed and sent again.
+- `needs_support`: ListKit has to resolve it. Offer `request_human_help` with a summary.
+
+If `can_retry` is true, offer to confirm it again: `confirm_domain_order` with its `id` and a new `idempotency_key`. If `can_retry` is false, don't try it again.
 
 If they open with "I have 0 credits and no idea how to start", answer the credits part in one line (credits buy leads, they don't limit sending, here's your balance and reset date) and keep going with this flow.
 

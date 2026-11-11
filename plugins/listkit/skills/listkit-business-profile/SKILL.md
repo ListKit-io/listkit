@@ -58,7 +58,7 @@ Never store passwords, API keys, card or bank numbers, or anything the user asks
 ## 5. Use it everywhere
 - **listkit-launch-first-campaign:** skip questions the profile answers.
 - **listkit-cold-email-copywriter:** the writer brief comes straight from Offer, Proof, Guarantee, ICP words and Assets.
-- **listkit-list-builder:** ICP and lead target set the routes and the number to work back from. Exclusions go on the exclude list (`manage_exclusions(action=add_entries)` or `manage_exclusions(action=import_list)`).
+- **listkit-list-builder:** ICP and lead target set the routes and the number to work back from. Exclusions go on the exclude list (`add_to_exclusions(action=add_entries)` or `add_to_exclusions(action=import_list)`).
 - **listkit-reply-desk:** inbox routine setup comes from the Calls line.
 - **listkit-outbound-planner** and **listkit-results-report:** goal, deal value and close rate.
 
