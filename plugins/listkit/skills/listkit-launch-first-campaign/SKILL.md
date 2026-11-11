@@ -39,7 +39,7 @@ Which state wins:
 
 For state H, `failure_kind` means:
 - `temporary_retrying`: a vendor fault that ListKit retries automatically. With `can_retry` false, ListKit is still retrying it: treat it as state B. With `can_retry` true, the retries stopped and the retry rule below applies.
-- `pool_exhausted`: the pre-warmed pool couldn't cover it. Go to Step 2 and show both options there.
+- `pool_exhausted`: the pre-warmed pool couldn't cover it. With 0 inboxes (`inboxes.ready` and `inboxes.warming` both 0), go to Step 2 and show both options there, unless a part has a read error (below). With inboxes, tell them why the order failed, and offer Step 2 only if they ask for more inboxes.
 - `needs_user_fix`: the request was rejected. It can be fixed and sent again, but no field says what to fix. Don't confirm it again unchanged. Offer `request_human_help` with a summary.
 - `needs_support`: ListKit has to resolve it. Offer `request_human_help` with a summary.
 
@@ -47,7 +47,9 @@ If `can_retry` is true and the kind is not `needs_user_fix`, offer to confirm it
 
 The overview lists each part it couldn't read under `errors`:
 - `errors.domain_orders`: `latest_order` is null because the read failed, not because there is no order. Read `get_domains(action=orders)` one time and classify with its newest order. If that read fails too, tell them the domain order state can't be read right now. Don't start a new domain order. Go on with what doesn't need it (the Step 3 questions), or offer `request_human_help`.
-- `errors.inboxes`, `errors.domain_stats` or `errors.domain_provisioning`: it isn't state A, so don't go to Step 2. Tell them which part couldn't be read, and go on with what doesn't need it.
+- `errors.inboxes`, `errors.domain_stats` or `errors.domain_provisioning`: it isn't state A, so don't go to Step 2. Tell them which part couldn't be read, and go on with what doesn't need it. With `errors.inboxes`, G and H still apply, because the domain order state is readable: offer to finish a draft order, or say what happened to a failed order.
+
+While one of these parts has an error that no fallback read fixed, don't go to Step 2. This wins over every other path to Step 2, `pool_exhausted` too.
 
 If they open with "I have 0 credits and no idea how to start", answer the credits part in one line (credits buy leads, they don't limit sending, here's your balance and reset date) and keep going with this flow.
 
@@ -55,7 +57,7 @@ The overview's `onboarding` `completed` only means they subscribed. Campaign sta
 
 Tell them in one sentence where they are and the date they can send. Example: "Your 40 inboxes finish warmup on Thu Oct 22, so we'll build your first campaign now and schedule it to start that morning."
 
-## Step 2. Infrastructure (only if state A, or state H with `pool_exhausted`)
+## Step 2. Infrastructure (only if state A, or state H with `pool_exhausted` and 0 inboxes)
 
 - `get_domains(action=prewarmed_availability)` with their bundle count, then present both options neutrally. Don't push either as the default:
   - Pre-warmed (.info domains): sending in minutes, then the 7-sending-day ramp. Gets them sending sooner, but hasn't retained better: pre-warmed customers who rush a list out and see no quick result leave faster.
