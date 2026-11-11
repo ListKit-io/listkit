@@ -21,7 +21,7 @@ Classify where they are:
 
 | State | What you see | Path |
 |---|---|---|
-| A. No infrastructure | 0 domains, 0 inboxes, `domains.latest_order` null or `cancelled`, no `errors.domain_orders` | Step 2 |
+| A. No infrastructure | 0 domains, 0 inboxes, `domains.latest_order` null or `cancelled`, and no `errors` key `inboxes`, `domain_stats`, `domain_provisioning` or `domain_orders` | Step 2 |
 | B. Infra provisioning | provisioning step not `ready`, or `domains.latest_order.status` `pending` or `active` with 0 inboxes | Build everything now, schedule the start for when inboxes are ready |
 | C. Warming | inboxes still warming (`inboxes.warming` above 0) | Build everything now, schedule the start for warmup end |
 | D. Ready, nothing live | inboxes READY (`inboxes.ready` above 0), 0 active campaigns | Skip any welcome tour. Go straight to the Step 3 questions, build and launch now |
@@ -30,17 +30,24 @@ Classify where they are:
 | G. Unconfirmed domain order | `domains.latest_order.status` `draft` | They drafted a branded order and didn't confirm it. Offer to finish that order: tell them its `domain_count` and the day they drafted it (`created_at`), confirm, then `confirm_domain_order` with its `id`. Don't start a new order |
 | H. Failed domain order | `domains.latest_order.status` `failed` | Read `get_domains(action=orders)` one time for that order's `failure_kind` and `can_retry`, and tell them what happened (below) |
 
-Check A to F first. G and H apply only when none of A to F matches, so inboxes that are ready, warming or set up from an older order always come first.
+Which state wins:
+- F comes first: its checklist runs before anything else.
+- Then the inboxes, in this order: D, C, B. Ready inboxes win: if some are READY and some still warming, launch on the ready ones now.
+- G and H apply only when none of B, C and D matches, so inboxes from an older order always come first.
+- A applies only when nothing above matches.
+- E can come with any of these. Finish the campaign on that state's path. With G or H, deal with the domain order first, then finish the campaign.
 
 For state H, `failure_kind` means:
-- `temporary_retrying`: a vendor fault that ListKit retries automatically. Treat it as state B.
-- `pool_exhausted`: the pre-warmed pool couldn't cover it. Offer the branded option of Step 2.
+- `temporary_retrying`: a vendor fault that ListKit retries automatically. With `can_retry` false, ListKit is still retrying it: treat it as state B. With `can_retry` true, the retries stopped and the retry rule below applies.
+- `pool_exhausted`: the pre-warmed pool couldn't cover it. Go to Step 2 and show both options there.
 - `needs_user_fix`: the request was rejected. It can be fixed and sent again, but no field says what to fix. Don't confirm it again unchanged. Offer `request_human_help` with a summary.
 - `needs_support`: ListKit has to resolve it. Offer `request_human_help` with a summary.
 
 If `can_retry` is true and the kind is not `needs_user_fix`, offer to confirm it again: `confirm_domain_order` with its `id` and a new `idempotency_key`. If `can_retry` is false, don't try it again.
 
-If the overview has `errors.domain_orders`, `latest_order` is null because the read failed, not because there is no order. Read `get_domains(action=orders)` one time and classify with its newest order before you go to Step 2.
+The overview lists each part it couldn't read under `errors`:
+- `errors.domain_orders`: `latest_order` is null because the read failed, not because there is no order. Read `get_domains(action=orders)` one time and classify with its newest order. If that read fails too, tell them the domain order state can't be read right now. Don't start a new domain order. Go on with what doesn't need it (the Step 3 questions), or offer `request_human_help`.
+- `errors.inboxes`, `errors.domain_stats` or `errors.domain_provisioning`: it isn't state A, so don't go to Step 2. Tell them which part couldn't be read, and go on with what doesn't need it.
 
 If they open with "I have 0 credits and no idea how to start", answer the credits part in one line (credits buy leads, they don't limit sending, here's your balance and reset date) and keep going with this flow.
 
