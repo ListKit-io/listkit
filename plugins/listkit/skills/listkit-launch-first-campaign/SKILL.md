@@ -38,7 +38,7 @@ Which state wins:
 - E can come with any of these. Finish the campaign on that state's path. With G or H, deal with the domain order first, then finish the campaign.
 
 For state H, `failure_kind` means:
-- `temporary_retrying`: a vendor fault that ListKit retries automatically. With `can_retry` false, ListKit is still retrying it: treat it as state B. With `can_retry` true, the retries stopped and the retry rule below applies.
+- `temporary_retrying`: a vendor fault. With `can_retry` false, don't treat it as state B and don't say ListKit is retrying it: say the order failed on a vendor fault and isn't resolved yet, and offer `request_human_help` with a summary. With `can_retry` true, the retry rule below applies.
 - `pool_exhausted`: the pre-warmed pool couldn't cover it. With 0 inboxes (`inboxes.ready` and `inboxes.warming` both 0), go to Step 2 and show both options there, unless a part has a read error (below). With inboxes, tell them why the order failed, and offer Step 2 only if they ask for more inboxes.
 - `needs_user_fix`: the request was rejected. It can be fixed and sent again, but no field says what to fix. Don't confirm it again unchanged. Offer `request_human_help` with a summary.
 - `needs_support`: ListKit has to resolve it. Offer `request_human_help` with a summary.
