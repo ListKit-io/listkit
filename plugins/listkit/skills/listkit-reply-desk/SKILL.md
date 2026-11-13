@@ -44,7 +44,7 @@ Re-read the message body every time. Don't trust the ListKit category alone.
 | Not now | "next quarter", "budget in Jan" | Thank them, set the category, note the date in the run report |
 | Confirms a time | "Tuesday at 2 works" | Book it (§6) |
 | No | "not interested", "no thanks" | Set Not Interested. No reply unless they asked a question |
-| Remove me | "remove me", "unsubscribe", "stop emailing" | `delete_leads` with no `campaign_id` (`dry_run` first) so they leave every campaign, then `manage_exclusions(action=add_entries)`. No reply |
+| Remove me | "remove me", "unsubscribe", "stop emailing" | `delete_leads` with no `campaign_id` (`dry_run` first) so they leave every campaign, then `add_to_exclusions(action=add_entries)`. No reply |
 | Auto | out-of-office, auto-ack, bounce, left company | Set Out Of Office (or the closest category) so positives stay honest. No reply, no follow-up |
 
 **Hold as a draft and flag it, don't send:** anger or legal threats, custom pricing or contract questions you can't answer from §1, requests for documents you don't have, anything about a refund or a billing dispute, a prospect who already met the user, and anything you're unsure about. Flag these at the top of the run report and by webhook if set up.

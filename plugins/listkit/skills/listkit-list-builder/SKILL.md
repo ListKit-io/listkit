@@ -119,7 +119,7 @@ Precision beats raw numbers, but a list too small to test teaches nothing.
 ### 7. Exclusions BEFORE ordering
 The account exclude list does not yet apply to orders. Protect the user:
 - Ask once: "Any customers, open deals or past contacts to keep off this list?"
-- Domains/LinkedIn/emails: `manage_exclusions(action=add_entries)` (or `manage_exclusions(action=create_list)` + `manage_exclusions(action=import_list)` via `create_upload_link` for a CSV). This filters search results.
+- Domains/LinkedIn/emails: `add_to_exclusions(action=add_entries)` (or `add_to_exclusions(action=create_list)` + `add_to_exclusions(action=import_list)` via `create_upload_link` for a CSV). This filters search results.
 - For orders, pass up to 1,000 emails in `exclude_emails`. For bigger lists, run `get_exclusions(action=check)` on delivered contacts before importing them to a campaign and drop matches.
 
 ### 8. Estimate and order
