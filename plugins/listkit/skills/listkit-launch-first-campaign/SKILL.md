@@ -112,7 +112,7 @@ Sending: all 40 ready inboxes attached, signatures set where missing,
   Mon to Fri, 8am to 5pm ET, START on Thu Oct 22
 Go?
 ```
-If starting the campaign reserves credits, the `launch_campaign` confirmation in Step 7 says up to how many (and any commitment warning), and you'll check that before START. The leads go in before the launch, so that figure counts them. If it's more than the plan above, show it and get a yes before starting.
+If starting the campaign reserves credits, the `launch_campaign` answer in Step 7 says up to how many (and any commitment warning). The leads go in before the launch, so that figure counts them. Pass the plan above as `max_credits` so START never reserves more.
 This yes covers exactly the plan above. Each spend call still goes through the server's confirmation. Anything not in the block, or costing more, needs a new yes.
 
 ## Step 6. Write the sequence (hand the method to listkit-cold-email-copywriter)
@@ -124,17 +124,17 @@ This yes covers exactly the plan above. Each spend call still goes through the s
 
 ## Step 7. Assemble and launch
 
-Add the leads first, then one `launch_campaign` call attaches the senders, saves the schedule and STARTs. The user approves it once, and ListKit's confirmation names every step and its cost.
+Add the leads first, then one `launch_campaign` call attaches the senders, saves the schedule and STARTs. In ListKit's auto mode (on by default) it runs on the first call, and its answer names every step and its cost.
 
 1. Add leads once the order completes: poll `get_order`, then `add_order_contacts_to_campaign` (`order_ids`, `campaign_ids`), then `get_leads(action=import_status)` until done (the `file_id` is in the import answer's `imports`). Read `statistics` (`upload_count` added, `duplicate_count`, `block_count`, `bounce_count`). If added is under 80% of what you sent, say so in one line ("1,240 of 2,000 went in: 760 were duplicates or on the block list"). Don't call the campaign ready until 1,000+ were added, and don't launch it before that: fill it first. People who are already leads in the user's OTHER campaigns go in by default (`ignore_duplicate_leads_in_other_campaign: false`). `true` LEAVES OUT every contact that is already a lead in another campaign: set it only if the user asks to keep those people out, and ask before you re-import with it. Never set `ignore_global_block_list` or `ignore_community_bounce_list` to true unless the user asks.
 2. Senders: `senders: "all_ready"` attaches EVERY sending-ready inbox on the account (warmed up and connected, from at most 5 pages of 100 inboxes, so up to 500 inboxes). That's the default for every campaign, so it can use the account's full capacity. Only use fewer if the user explicitly asks to split inboxes between campaigns or clients: then pass those inboxes' ids from `list_mailboxes`. If the inboxes are still warming (state C), `"all_ready"` finds none and refuses. Then pass the ids of the warming inboxes from `list_mailboxes` that are connected and whose signature names their sender, and use `get_account_health` for the date they are ready. If the account has no inboxes yet (state B), finish everything else and launch once the inboxes exist (offer a one-time scheduled task for that date).
 3. Schedule: `time_zone` = the prospects' IANA zone (e.g. `America/New_York`), `days_of_week` [1,2,3,4,5] (0 = Sunday), `start_hour` "08:00", `end_hour` "17:00", `schedule_start_time` as a full ISO 8601 datetime (e.g. `2026-10-22T08:00:00-04:00`), never a bare date. Start = now if inboxes are ready, else the warmup end date.
 4. Signatures (blocking): every attached inbox needs a signature that matches its sender. Step 1's `inboxes.without_signature` and `inboxes.signature_name_mismatch` count the empty and mismatched ones. To see which inboxes they are, and to catch a wrong one (a test signature, a different name), read `signature` with `list_mailboxes` (`limit: 100`, follow `next_cursor`). If any are empty or wrong, set one with `update_mailboxes(action=signature)` (confirm, under 350 characters, name + title + company). Don't launch with blank signatures.
-5. Launch: `launch_campaign` with `id`, `senders: "all_ready"`, `schedule` and a new `idempotency_key` (e.g. `launch-2026-10-22-dental-us`), without `order_ids` (the leads are in from item 1). If the Step 5 plan set a credit limit for START, pass it as `max_credits`: the tool does not START above it. Start the campaign yourself: the user already said yes to the plan. Don't leave it in Draft for them to click.
-   - Before it asks, the tool checks the senders. If a sender has a blank signature, it refuses and names those inboxes. Tell the user what the refusal says (which inboxes have no signature), set a signature on each as in item 4, then call `launch_campaign` again.
-   - Its confirmation says how many inboxes `"all_ready"` takes (check that against `inboxes.ready` from Step 1) and which it leaves out because their signature names someone other than the sender. Tell the user which were left out, and fix their signatures if the user wants them on the campaign.
-   - The confirmation also says up to how many credits START reserves, with any commitment warning. If it's more than the Step 5 plan, show it and get a yes before starting.
-   - If it stops at a step, it says which steps ran and what to do next. Tell the user in plain words, and get their yes before you run it again or change anything: a new launch with a new `idempotency_key` can spend credits.
+5. Launch: `launch_campaign` with `id`, `senders: "all_ready"`, `schedule` and a new `idempotency_key` (e.g. `launch-2026-10-22-dental-us`), without `order_ids` (the leads are in from item 1). If the Step 5 plan set a credit limit for START, pass it as `max_credits`: the tool does not START above it. Start the campaign yourself: the user asked for it. Don't leave it in Draft for them to click.
+   - Before it runs, the tool checks the senders. If a sender has a blank signature, it refuses and names those inboxes. Tell the user what the refusal says (which inboxes have no signature), set a signature on each as in item 4, then call `launch_campaign` again.
+   - Its answer says how many inboxes `"all_ready"` takes (check that against `inboxes.ready` from Step 1) and which it leaves out because their signature names someone other than the sender. Tell the user which were left out, and fix their signatures if the user wants them on the campaign.
+   - It also says up to how many credits START reserved, with any commitment warning. Pass the Step 5 plan's limit as `max_credits` so it never STARTs above the plan.
+   - If it stops at a step, it says which steps ran and what to do next. Tell the user in plain words, fix what it names, and run it again with the same `idempotency_key`: a new key starts a new launch that can spend credits again.
 6. Read it back with `list_campaigns` and confirm the status is Active (or scheduled for the ready date).
 
 If inboxes are still warming, start it with the schedule set to the warmup end date and say exactly when it goes out.
@@ -153,7 +153,7 @@ If the overview's `onboarding` (Step 1) shows the strategy call isn't done, give
 Then book the review: offer a calendar reminder for a results check ~21 days after first send, the window that decides whether customers stay (use their calendar connector if they have one). That review should be with this same workflow: run **listkit-campaign-doctor**.
 
 ## Step 8b. Set up the inbox routine
-Before replies start coming in, set up the inbox routine (**listkit-reply-desk** §1), which drafts every reply and follow-up for one-tap approval: booking link, what the call is, pricing they'll share, who takes calls, time zone. Every positive then has a reply waiting for approval within the hour and gets followed up until it books, which is what decides the first 21 days.
+Before replies start coming in, set up the inbox routine (**listkit-reply-desk** §1), which sends guarded replies and follow-ups in auto mode: booking link, what the call is, pricing they'll share, who takes calls, time zone. Every positive then gets a reply within the hour and gets followed up until it books, which is what decides the first 21 days.
 
 ## Step 9. Queue campaign 2 before you leave
 

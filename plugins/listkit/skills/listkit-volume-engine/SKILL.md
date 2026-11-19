@@ -15,7 +15,7 @@ Follow **listkit-operator** rules.
 - `get_campaigns_report` without `start_date` or `end_date`, so the range is the tool's default: the last 30 days, UTC (a longer range makes the answer too large): one call for the active campaigns (Active first, at most 10) and their totals, `day_wise` per campaign (use the last 7 days), and `allowance` (sends used vs limit this period, contacts stored vs limit). If it says `campaigns_capped: true`, call it again with `campaign_ids` for the rest (ids from `list_campaigns`). §3 scores from the same answer. If a campaign started before the range, tell the user that its totals and rates cover only the last 30 days.
 - `get_account_health`: `capacity.daily_capacity` = daily capacity (the daily limits of the connected inboxes), and `capacity.sent_today` = today's actual. It also lists ramping and disconnected inboxes, and active campaigns with no sends yesterday or today.
 
-Inbox coverage: every active campaign should have every sending-ready inbox attached. If an inbox became READY (finished warmup or a new Bundle) and isn't on the active campaigns, propose attaching it to all of them and attach on the user's yes. A scheduled run only lists it for approval.
+Inbox coverage: every active campaign should have every sending-ready inbox attached. If an inbox became READY (finished warmup or a new Bundle) and isn't on the active campaigns, attach it to all of them and say so in the report.
 
 Flag immediately:
 - Any day with 0 sends in the last 48h on a weekday → hand off to **listkit-sending-health**
@@ -66,10 +66,10 @@ Set it up with the user once:
 1. **Weekly run (Monday morning):** the full routine above.
 2. **Mid-week check (Thursday):** steps 1 and 2 only (sending stalls, lead runway).
 3. **Spending guardrails, agreed up front and written into the task:**
-   - The task never spends credits or changes campaigns on its own. It prepares each refill as a proposal (saved filter, quantity, cost from `estimate_order`, target campaign); the order and import run only after the user's yes in a conversation and the server's confirmation.
-   - A weekly credit budget for proposed refills (e.g. "up to 3,000 credits/week"). It caps what gets proposed; it is not a pre-approval.
+   - Refills run on their own in ListKit's auto mode (on by default): the order (with `max_credits`) and the import into the campaign, within the weekly budget below. Anything ListKit answers with a confirmation instead goes to the top of the report.
+   - A weekly credit budget for refills (e.g. "up to 3,000 credits/week"). The task never spends past it.
    - Which saved filters it may refill from (`list_filters(action=saved)`). It never invents a new ICP on its own.
-   - New campaigns, new copy, pausing or deleting anything: the task drafts and reports, the user approves next time they're in the chat.
-4. **Report** at the end of every run in the format above, with anything waiting for approval at the top.
+   - Pausing or deleting anything: the task drafts and reports, the user decides next time they're in the chat.
+4. **Report** at the end of every run in the format above, with anything ListKit held for a confirmation at the top.
 
-Write the task prompt so it stands alone: account name, saved filter names, campaigns it may propose refills for, the weekly budget, and "load listkit-operator and listkit-volume-engine first. Read and propose only; never spend credits or change campaigns without my yes".
+Write the task prompt so it stands alone: account name, saved filter names, campaigns it may refill, the weekly budget, and "load listkit-operator and listkit-volume-engine first. Refill within the weekly budget; never pause or delete without my yes".
