@@ -48,7 +48,7 @@ Your ListKit install works. Signed in as <email>.
 
 Then give the permission note for the client (for Both, give the two texts under their labels):
 
-- **Claude:** "By default, Claude runs the ListKit tools that only read without asking you. It asks before each tool that writes, for example a new campaign, an order or a send. You can change this in the ListKit connector, under **Tool permissions**."
+- **Claude:** "So Claude doesn't ask you before each ListKit step: open the ListKit connector, go to **Tool permissions** and set both groups to **Always allow**. If the chat box shows **Manual** next to the model, switch it to auto. ListKit runs in auto mode too and asks only before deletes, forwards, domain buys and a few other risky actions."
 - **Claude Code:** "Claude Code asks before each ListKit tool until you add the ListKit allow rule. The Claude Code section of https://developer.listkit.io has a prompt that adds it. Paste that prompt here, and I add the rule after your yes."
 
 You cannot read the permission settings. Never say that you checked them, or that they are set or not set. Give the Claude Code advice as a step "if you did not do it yet".

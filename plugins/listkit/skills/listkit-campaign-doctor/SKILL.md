@@ -73,7 +73,7 @@ Fix (I can do these now):
 3. ...
 ```
 
-Then ask: "Want me to do 1 and 2?" and execute with the normal confirmations.
+Then ask: "Want me to do 1 and 2?" and do it when they say yes.
 
 "Do I stop the campaign or what do you suggest?" is this skill's entry point. Answer with a direct recommendation and numbers, never a menu.
 
@@ -81,7 +81,7 @@ Then ask: "Want me to do 1 and 2?" and execute with the normal confirmations.
 - Rewrite with 4 variants + spintax: **listkit-cold-email-copywriter**, then `save_campaign_sequence` (read first, it replaces everything).
 - New angle as a new campaign: `duplicate_campaign`, new sequence, fresh list.
 - Fresh list for a winner: **listkit-list-builder**, then import.
-- Kill a loser (3,000+ leads, confirmed): pause via `update_campaign` with status PAUSED (confirm). PAUSED, not STOPPED: STOPPED can't be undone.
+- Kill a loser (3,000+ leads, confirmed): pause via `update_campaign` with status PAUSED. PAUSED, not STOPPED: STOPPED can't be undone.
 - Reply backlog: **listkit-reply-desk**.
 
 ## 7. Tone
