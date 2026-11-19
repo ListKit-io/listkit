@@ -129,7 +129,7 @@ The account exclude list does not yet apply to orders. Protect the user:
 - `fields: ["work_email"]` by default. Add `mobile` only if they'll call AND the list is US (mobile is US only, 3 credits each).
 - `max_per_company`: 2 to 3 for SMB lists so one company doesn't eat the batch.
 - Name it `[ICP] [geo] [Mon DD]`.
-- Confirm cost, then `find_and_order_leads` with an idempotency key. Poll `get_order` until `completed` or `partial`. If partial, explain shortfall in one line (pool exhausted or per-company cap). If the Order History page errors in the app, give the contacts with `get_order_contacts`.
+- Read the cost with `estimate_order`, then `find_and_order_leads` with `max_credits` and an idempotency key. Poll `get_order` until `completed` or `partial`. If partial, explain shortfall in one line (pool exhausted or per-company cap). If the Order History page errors in the app, give the contacts with `get_order_contacts`.
 
 ### 9. Save and recycle
 - `save_search_filter` for every route (`[ICP] - [route]`) so refills are one click.

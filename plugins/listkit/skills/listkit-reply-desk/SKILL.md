@@ -35,7 +35,7 @@ Then create a scheduled task in their AI tool that runs this skill on weekdays a
 ## 3. Triage and act
 Re-read the message body every time. Don't trust the ListKit category alone.
 
-| Bucket | Signals | Draft / action (sent on the user's yes) |
+| Bucket | Signals | Draft / action |
 |---|---|---|
 | Hot | "yes", "interested", "send it over", asks price/how/when | Reply now (§4), set Interested |
 | Warm | "what's this about", "who are you", "maybe" | Answer the question, soft ask for the call |
@@ -102,14 +102,14 @@ Let me know a time or book in here: {booking link}
 ## 7. Run report (every run, short)
 ```
 Inbox run, Tue 10am: 9 new replies
-Ready to send: 3 replies to hot leads · 4 follow-ups · 1 booking confirm (Acme, Wed 2pm)
-To set: 2 not now (follow up Jan) · 3 no · 1 removal · 2 out of office
+Sent: 3 replies to hot leads · 4 follow-ups · 1 booking confirm (Acme, Wed 2pm)
+Set: 2 not now (follow up Jan) · 3 no · 1 removal · 2 out of office
 ⚠️ Needs you: 1 (asks for a custom quote, draft ready)
 Skipped: 2 (already answered by you)
 ```
 Put anything that needs the user at the top, and end with what was sent and anything held as a draft ("Sent 7, held 1: tell me what to change"). If nothing happened, one line.
 
 ## 8. When the user is in the chat
-Same rules, live: show the drafts from the last runs plus anything new, get one yes for the batch (or edits), then send each and set the categories. If they haven't set up the routine yet, do §1 first.
+Same rules, live: send the replies and follow-ups for anything new and set the categories, then show what went out. Drafts held by an earlier run (assisted mode, or ListKit asked) go to the user for one batch yes or edits. If they haven't set up the routine yet, do §1 first.
 
 If the app's reply button hangs on "Sending", this skill is the workaround: send through here and report the bug with the handoff in **listkit-account-help**. If sending fails here too, hand off with the thread details.

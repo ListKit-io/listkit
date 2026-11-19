@@ -14,7 +14,7 @@ All campaign copy comes from ListKit's AI Script Writer (`generate_campaign_sequ
 
 The writer is only as good as the brief. Its output usually gets to third base on its own; your review brings it home with one or two small edits, not a rewrite.
 
-Follow **listkit-operator** spend rules. The writer and spintax tools cost 100 credits each, only on success. Include that cost in the campaign plan you confirm with the user, so it's one yes, not three.
+Follow **listkit-operator** spend rules. The writer and spintax tools cost 100 credits each, only on success. Include that cost in the campaign plan you show the user.
 
 ## 1. Get the inputs (from the business profile first, then ask only for what's missing, in one message)
 The in-app writer was built around these inputs. Most important first:
@@ -65,7 +65,7 @@ Rules:
 - Always put "Business name:" in `offering`, or the writer can't use it in subject lines.
 - Only put numbers in the brief that the user gave you. Any number in the brief ends up in the emails.
 - Never "book a 30-minute demo" in email 1.
-- Show the brief to the user in 3 short lines as part of the plan confirmation.
+- Show the brief to the user in 3 short lines as part of the plan.
 
 ## 3. Run it
 1. The writer works per campaign, so `create_campaign` first if there isn't one.
